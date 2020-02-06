@@ -906,19 +906,19 @@ body.is-touch .container.style3 {
 	width: calc(50% + 4rem);
 }
 
-#container04 > .inner > :nth-child(1) {
-	width: calc(50% + 4rem);
-}
-
-#container04 > .inner > :nth-child(2) {
-	width: calc(50% + 4rem);
-}
-
 #container01 > .inner > :nth-child(1) {
 	width: calc(50% + 4rem);
 }
 
 #container01 > .inner > :nth-child(2) {
+	width: calc(50% + 4rem);
+}
+
+#container04 > .inner > :nth-child(1) {
+	width: calc(50% + 4rem);
+}
+
+#container04 > .inner > :nth-child(2) {
 	width: calc(50% + 4rem);
 }
 
@@ -1262,10 +1262,6 @@ body.is-touch .container.style3 {
 	display: block;
 }
 
-.image.style1 img {
-	width: 100vw;
-}
-
 .image.style2:not(:first-child) {
 	margin-top: 5rem !important;
 }
@@ -1275,6 +1271,10 @@ body.is-touch .container.style3 {
 }
 
 .image.style2 img {
+	width: 100vw;
+}
+
+.image.style1 img {
 	width: 100vw;
 }
 
@@ -2282,18 +2282,6 @@ form.style1 .file[data-filename=""]:before {
 		text-align: inherit !important;
 	}
 	
-	#container04 > .inner > :nth-child(1) {
-		width: 100% !important;
-		min-height: 100% !important;
-		text-align: inherit !important;
-	}
-	
-	#container04 > .inner > :nth-child(2) {
-		width: 100% !important;
-		min-height: 100% !important;
-		text-align: inherit !important;
-	}
-	
 	#container01 > .inner > :nth-child(1) {
 		width: 100% !important;
 		min-height: 100% !important;
@@ -2301,6 +2289,18 @@ form.style1 .file[data-filename=""]:before {
 	}
 	
 	#container01 > .inner > :nth-child(2) {
+		width: 100% !important;
+		min-height: 100% !important;
+		text-align: inherit !important;
+	}
+	
+	#container04 > .inner > :nth-child(1) {
+		width: 100% !important;
+		min-height: 100% !important;
+		text-align: inherit !important;
+	}
+	
+	#container04 > .inner > :nth-child(2) {
 		width: 100% !important;
 		min-height: 100% !important;
 		text-align: inherit !important;
@@ -2646,19 +2646,19 @@ form.style1 .file[data-filename=""]:before {
 		width: calc(50% + 3.25rem);
 	}
 	
-	#container04 > .inner > :nth-child(1) {
-		width: calc(50% + 3.25rem);
-	}
-	
-	#container04 > .inner > :nth-child(2) {
-		width: calc(50% + 3.25rem);
-	}
-	
 	#container01 > .inner > :nth-child(1) {
 		width: calc(50% + 3.25rem);
 	}
 	
 	#container01 > .inner > :nth-child(2) {
+		width: calc(50% + 3.25rem);
+	}
+	
+	#container04 > .inner > :nth-child(1) {
+		width: calc(50% + 3.25rem);
+	}
+	
+	#container04 > .inner > :nth-child(2) {
 		width: calc(50% + 3.25rem);
 	}
 	
@@ -2927,7 +2927,15 @@ form.style1 .file[data-filename=""]:before {
 		height: auto;
 	}
 	
-	.image.style1 img {
+	.image.style2:not(:first-child) {
+		margin-top: 3rem !important;
+	}
+	
+	.image.style2:not(:last-child) {
+		margin-bottom: 3rem !important;
+	}
+	
+	.image.style2 img {
 		height: 21.25rem !important;
 		-moz-object-fit: cover;
 		-webkit-object-fit: cover;
@@ -2939,15 +2947,7 @@ form.style1 .file[data-filename=""]:before {
 		object-position: center;
 	}
 	
-	.image.style2:not(:first-child) {
-		margin-top: 3rem !important;
-	}
-	
-	.image.style2:not(:last-child) {
-		margin-bottom: 3rem !important;
-	}
-	
-	.image.style2 img {
+	.image.style1 img {
 		height: 21.25rem !important;
 		-moz-object-fit: cover;
 		-webkit-object-fit: cover;
@@ -3061,11 +3061,11 @@ form.style1 .file[data-filename=""]:before {
 		margin-bottom: 0.5rem;
 	}
 	
-	.image.style1 img {
+	.image.style2 img {
 		height: 17rem !important;
 	}
 	
-	.image.style2 img {
+	.image.style1 img {
 		height: 17rem !important;
 	}
 	
@@ -3445,11 +3445,11 @@ form.style1 .file[data-filename=""]:before {
 		margin-bottom: calc(-0rem) !important;
 	}
 	
-	.image.style1 img {
+	.image.style2 img {
 		height: 14.875rem !important;
 	}
 	
-	.image.style2 img {
+	.image.style1 img {
 		height: 14.875rem !important;
 	}
 	
