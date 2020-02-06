@@ -374,7 +374,37 @@
 							}
 	
 				},
-				sections = {};
+				doEvent = function(id, type) {
+	
+					var name = id.split(/-[a-z]+$/)[0], i;
+	
+					if (name in sections
+					&&	'events' in sections[name]
+					&&	type in sections[name].events)
+						for (i in sections[name].events[type])
+							(sections[name].events[type][i])();
+	
+				},
+				sections = {
+					'done': {
+						events: {
+							onopen: [
+								function() { 
+									gtag('config', 'UA-137164796-4', { 'page_path': '/#done' });
+								},
+							],
+						},
+					},
+					'home': {
+						events: {
+							onopen: [
+								function() { 
+									gtag('config', 'UA-137164796-4', { 'page_path': '/' });
+								},
+							],
+						},
+					},
+				};
 	
 			// Expose doNext, doPrevious.
 				window._next = doNext;
@@ -466,6 +496,9 @@
 	
 					// Activate initial section.
 						initialSection.classList.add('active');
+	
+						// Event: On Open.
+							doEvent(initialId, 'onopen');
 	
 					// Load elements.
 						loadElements(initialSection);
@@ -573,6 +606,9 @@
 									// Unload elements.
 										unloadElements(currentSection);
 	
+										// Event: On Close.
+											doEvent(currentSection.id, 'onclose');
+	
 									// Hide.
 										setTimeout(function() {
 											currentSection.style.display = 'none';
@@ -599,6 +635,9 @@
 											// Activate.
 												section.classList.remove('inactive');
 												section.classList.add('active');
+	
+												// Event: On Open.
+													doEvent(section.id, 'onopen');
 	
 											// Delay.
 												setTimeout(function() {
