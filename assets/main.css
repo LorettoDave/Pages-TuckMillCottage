@@ -392,6 +392,14 @@ h1.style5, h2.style5, h3.style5, p.style5 {
 	font-weight: 300;
 }
 
+h1.style5 a, h2.style5 a, h3.style5 a, p.style5 a {
+	text-decoration: underline;
+}
+
+h1.style5 a:hover, h2.style5 a:hover, h3.style5 a:hover, p.style5 a:hover {
+	text-decoration: none;
+}
+
 h1.style1, h2.style1, h3.style1, p.style1 br + br {
 	margin-top: 0.75rem;
 }
@@ -417,6 +425,14 @@ h1.style2, h2.style2, h3.style2, p.style2 {
 	font-size: 1em;
 	line-height: 1.25;
 	font-weight: 300;
+}
+
+h1.style2 a, h2.style2 a, h3.style2 a, p.style2 a {
+	text-decoration: underline;
+}
+
+h1.style2 a:hover, h2.style2 a:hover, h3.style2 a:hover, p.style2 a:hover {
+	text-decoration: none;
 }
 
 .icons {
@@ -882,6 +898,14 @@ body.is-touch .container.style3 {
 	border-radius: inherit;
 }
 
+#container09 > .inner > :nth-child(1) {
+	width: calc(50% + 4rem);
+}
+
+#container09 > .inner > :nth-child(2) {
+	width: calc(50% + 4rem);
+}
+
 #container04 > .inner > :nth-child(1) {
 	width: calc(50% + 4rem);
 }
@@ -1240,14 +1264,6 @@ body.is-touch .container.style3 {
 
 .image.style1 img {
 	width: 100vw;
-	-moz-object-fit: cover;
-	-webkit-object-fit: cover;
-	-ms-object-fit: cover;
-	object-fit: cover;
-	-moz-object-position: center;
-	-webkit-object-position: center;
-	-ms-object-position: center;
-	object-position: center;
 }
 
 .image.style2:not(:first-child) {
@@ -1906,10 +1922,11 @@ form.style1 .inner {
 
 form.style1 label:first-child {
 	margin: 0.25rem 0 0.9375rem 0;
+	text-align: left;
 	font-size: 1em;
 	line-height: 1.5;
 	font-family: 'Source Sans Pro', sans-serif;
-	font-weight: 300;
+	font-weight: 400;
 	color: #424242;
 }
 
@@ -2251,6 +2268,18 @@ form.style1 .file[data-filename=""]:before {
 	
 	.container.style2.columns > .inner > .full > .full:first-child:last-child a, .container.style2.columns > .inner > .full > .full:first-child:last-child span, .container.style2.columns > .inner > .full > .full:first-child:last-child img {
 		height: auto;
+	}
+	
+	#container09 > .inner > :nth-child(1) {
+		width: 100% !important;
+		min-height: 100% !important;
+		text-align: inherit !important;
+	}
+	
+	#container09 > .inner > :nth-child(2) {
+		width: 100% !important;
+		min-height: 100% !important;
+		text-align: inherit !important;
 	}
 	
 	#container04 > .inner > :nth-child(1) {
@@ -2607,6 +2636,14 @@ form.style1 .file[data-filename=""]:before {
 	
 	.container.style2.columns > .inner > .full > .full:first-child:last-child img {
 		max-height: none;
+	}
+	
+	#container09 > .inner > :nth-child(1) {
+		width: calc(50% + 3.25rem);
+	}
+	
+	#container09 > .inner > :nth-child(2) {
+		width: calc(50% + 3.25rem);
 	}
 	
 	#container04 > .inner > :nth-child(1) {
