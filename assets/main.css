@@ -368,6 +368,14 @@ h1.style3, h2.style3, h3.style3, p.style3 {
 	font-weight: 300;
 }
 
+h1.style3 a, h2.style3 a, h3.style3 a, p.style3 a {
+	text-decoration: underline;
+}
+
+h1.style3 a:hover, h2.style3 a:hover, h3.style3 a:hover, p.style3 a:hover {
+	text-decoration: none;
+}
+
 h1.style4, h2.style4, h3.style4, p.style4 br + br {
 	margin-top: 1.05rem;
 }
@@ -378,6 +386,14 @@ h1.style4, h2.style4, h3.style4, p.style4 {
 	font-size: 1.25em;
 	line-height: 1.75;
 	font-weight: 300;
+}
+
+h1.style4 a, h2.style4 a, h3.style4 a, p.style4 a {
+	text-decoration: underline;
+}
+
+h1.style4 a:hover, h2.style4 a:hover, h3.style4 a:hover, p.style4 a:hover {
+	text-decoration: none;
 }
 
 h1.style5, h2.style5, h3.style5, p.style5 br + br {
@@ -412,6 +428,14 @@ h1.style1, h2.style1, h3.style1, p.style1 {
 	font-size: 2.5em;
 	line-height: 1.25;
 	font-weight: 300;
+}
+
+h1.style1 a, h2.style1 a, h3.style1 a, p.style1 a {
+	text-decoration: underline;
+}
+
+h1.style1 a:hover, h2.style1 a:hover, h3.style1 a:hover, p.style1 a:hover {
+	text-decoration: none;
 }
 
 h1.style2, h2.style2, h3.style2, p.style2 br + br {

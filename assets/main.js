@@ -174,7 +174,122 @@
 	
 			return h;
 	
+		},
+		scrollToElement = function(e, style, duration) {
+	
+			var y, cy, dy,
+				start, easing, offset, f;
+	
+			// Element.
+	
+				// No element? Assume top of page.
+					if (!e)
+						y = 0;
+	
+				// Otherwise ...
+					else {
+	
+						offset = (e.dataset.scrollOffset ? parseInt(e.dataset.scrollOffset) : 0) * parseFloat(getComputedStyle(document.documentElement).fontSize);
+	
+						switch (e.dataset.scrollBehavior ? e.dataset.scrollBehavior : 'default') {
+	
+							case 'default':
+							default:
+	
+								y = e.offsetTop + offset;
+	
+								break;
+	
+							case 'center':
+	
+								if (e.offsetHeight < window.innerHeight)
+									y = e.offsetTop - ((window.innerHeight - e.offsetHeight) / 2) + offset;
+								else
+									y = e.offsetTop - offset;
+	
+								break;
+	
+							case 'previous':
+	
+								if (e.previousElementSibling)
+									y = e.previousElementSibling.offsetTop + e.previousElementSibling.offsetHeight + offset;
+								else
+									y = e.offsetTop + offset;
+	
+								break;
+	
+						}
+	
+					}
+	
+			// Style.
+				if (!style)
+					style = 'smooth';
+	
+			// Duration.
+				if (!duration)
+					duration = 750;
+	
+			// Instant? Just scroll.
+				if (style == 'instant') {
+	
+					window.scrollTo(0, y);
+					return;
+	
+				}
+	
+			// Get start, current Y.
+				start = Date.now();
+				cy = window.scrollY;
+				dy = y - cy;
+	
+			// Set easing.
+				switch (style) {
+	
+					case 'linear':
+						easing = function (t) { return t };
+						break;
+	
+					case 'smooth':
+						easing = function (t) { return t<.5 ? 4*t*t*t : (t-1)*(2*t-2)*(2*t-2)+1 };
+						break;
+	
+				}
+	
+			// Scroll.
+				f = function() {
+	
+					var t = Date.now() - start;
+	
+					// Hit duration? Scroll to y and finish.
+						if (t >= duration)
+							window.scroll(0, y);
+	
+					// Otherwise ...
+						else {
+	
+							// Scroll.
+								window.scroll(0, cy + (dy * easing(t / duration)));
+	
+							// Repeat.
+								requestAnimationFrame(f);
+	
+						}
+	
+				};
+	
+				f();
+	
+		},
+		scrollToTop = function() {
+	
+			// Scroll to top.
+				scrollToElement(null);
+	
 		};
+	
+		// Expose scrollToElement.
+			window._scrollToTop = scrollToTop;
 	
 	// Animation.
 		on('load', function() {
@@ -218,105 +333,28 @@
 					location.href = '#' + (section.matches(':first-child') ? '' : section.id.replace(/-section$/, ''));
 	
 				},
-				doScroll = function(e, style, duration) {
+				doFirst = function() {
 	
-					var y, cy, dy,
-						start, easing, f;
+					var section;
 	
-					// Element.
+					section = $('#main > .inner > section:first-of-type');
 	
-						// No element? Assume top of page.
-							if (!e)
-								y = 0;
+					if (!section || section.tagName != 'SECTION')
+						return;
 	
-						// Otherwise ...
-							else
-								switch (e.dataset.scrollBehavior ? e.dataset.scrollBehavior : 'default') {
+					location.href = '#' + section.id.replace(/-section$/, '');
 	
-									case 'default':
-									default:
+				},
+				doLast = function() {
 	
-										y = e.offsetTop;
+					var section;
 	
-										break;
+					section = $('#main > .inner > section:last-of-type');
 	
-									case 'center':
+					if (!section || section.tagName != 'SECTION')
+						return;
 	
-										if (e.offsetHeight < window.innerHeight)
-											y = e.offsetTop - ((window.innerHeight - e.offsetHeight) / 2);
-										else
-											y = e.offsetTop;
-	
-										break;
-	
-									case 'previous':
-	
-										if (e.previousElementSibling)
-											y = e.previousElementSibling.offsetTop + e.previousElementSibling.offsetHeight;
-										else
-											y = e.offsetTop;
-	
-										break;
-	
-								}
-	
-					// Style.
-						if (!style)
-							style = 'smooth';
-	
-					// Duration.
-						if (!duration)
-							duration = 750;
-	
-					// Instant? Just scroll.
-						if (style == 'instant') {
-	
-							window.scrollTo(0, y);
-							return;
-	
-						}
-	
-					// Get start, current Y.
-						start = Date.now();
-						cy = window.scrollY;
-						dy = y - cy;
-	
-					// Set easing.
-						switch (style) {
-	
-							case 'linear':
-								easing = function (t) { return t };
-								break;
-	
-							case 'smooth':
-								easing = function (t) { return t<.5 ? 4*t*t*t : (t-1)*(2*t-2)*(2*t-2)+1 };
-								break;
-	
-						}
-	
-					// Scroll.
-						f = function() {
-	
-							var t = Date.now() - start;
-	
-							// Hit duration? Scroll to y and finish.
-								if (t >= duration)
-									window.scroll(0, y);
-	
-							// Otherwise ...
-								else {
-	
-									// Scroll.
-										window.scroll(0, cy + (dy * easing(t / duration)));
-	
-									// Repeat.
-										requestAnimationFrame(f);
-	
-								}
-	
-						};
-	
-						f();
+					location.href = '#' + section.id.replace(/-section$/, '');
 	
 				},
 				loadElements = function(parent) {
@@ -406,9 +444,36 @@
 					},
 				};
 	
-			// Expose doNext, doPrevious.
+			// Expose doNext, doPrevious, doFirst, doLast.
 				window._next = doNext;
 				window._previous = doPrevious;
+				window._first = doFirst;
+				window._last = doLast;
+	
+			// Override exposed scrollToTop.
+				window._scrollToTop = function() {
+	
+					var section, id;
+	
+					// Scroll to top.
+						scrollToElement(null);
+	
+					// Section active?
+						if (!!(section = $('section.active'))) {
+	
+							// Get name.
+								id = section.id.replace(/-section$/, '');
+	
+								// Index section? Clear.
+									if (id == 'home')
+										id = '';
+	
+							// Reset hash to section name (via new state).
+								history.pushState(null, null, '#' + id);
+	
+						}
+	
+				};
 	
 			// Initialize.
 	
@@ -504,14 +569,14 @@
 						loadElements(initialSection);
 	
 				 	// Scroll to top.
-						doScroll(null, 'instant');
+						scrollToElement(null, 'instant');
 	
 				// Load event.
 					on('load', function() {
 	
 						// Scroll to initial scroll point (if applicable).
 					 		if (initialScrollPoint)
-								doScroll(initialScrollPoint, 'instant');
+								scrollToElement(initialScrollPoint, 'instant');
 	
 					});
 	
@@ -574,11 +639,11 @@
 	
 						 	// Scroll to scroll point (if applicable).
 						 		if (scrollPoint)
-									doScroll(scrollPoint);
+									scrollToElement(scrollPoint);
 	
 							// Otherwise, just scroll to top.
 								else
-									doScroll(null);
+									scrollToElement(null);
 	
 							// Bail.
 								return false;
@@ -627,7 +692,7 @@
 										trigger('resize');
 	
 									// Scroll to top.
-										doScroll(null, 'instant');
+										scrollToElement(null, 'instant');
 	
 									// Delay.
 										setTimeout(function() {
@@ -647,7 +712,7 @@
 	
 												 	// Scroll to scroll point (if applicable).
 												 		if (scrollPoint)
-															doScroll(scrollPoint, 'instant');
+															scrollToElement(scrollPoint, 'instant');
 	
 													// Unlock.
 														locked = false;
@@ -667,13 +732,38 @@
 				// Hack: Allow hashchange to trigger on click even if the target's href matches the current hash.
 					on('click', function(event) {
 	
-						var t = event.target;
+						var t = event.target,
+							tagName = t.tagName.toUpperCase();
 	
-						// Target is an image and its parent is a link? Switch target to parent.
-							if (t.tagName == 'IMG'
-							&&	t.parentElement
-							&&	t.parentElement.tagName == 'A')
-								t = t.parentElement;
+						// Find real target.
+							switch (tagName) {
+	
+								case 'IMG':
+								case 'SVG':
+								case 'USE':
+								case 'U':
+								case 'STRONG':
+								case 'EM':
+								case 'CODE':
+								case 'S':
+								case 'MARK':
+								case 'SPAN':
+	
+									// Find ancestor anchor tag.
+										while ( !!(t = t.parentElement) )
+											if (t.tagName == 'A')
+												break;
+	
+									// Not found? Bail.
+										if (!t)
+											return;
+	
+									break;
+	
+								default:
+									break;
+	
+							}
 	
 						// Target is an anchor *and* its href is a hash that matches the current hash?
 							if (t.tagName == 'A'
