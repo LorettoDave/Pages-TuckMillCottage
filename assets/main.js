@@ -25,6 +25,7 @@
 					['edge',		/Edge\/([0-9\.]+)/],
 					['safari',		/Version\/([0-9\.]+).+Safari/],
 					['chrome',		/Chrome\/([0-9\.]+)/],
+					['chrome',		/CriOS\/([0-9\.]+)/],
 					['ie',			/Trident\/.+rv:([0-9]+)/]
 				];
 	
@@ -172,6 +173,10 @@
 				&&	!h.match(/^[a-zA-Z]/))
 					h = 'x' + h;
 	
+			// Convert to lowercase.
+				if (typeof h == 'string')
+					h = h.toLowerCase();
+	
 			return h;
 	
 		},
@@ -286,6 +291,116 @@
 			// Scroll to top.
 				scrollToElement(null);
 	
+		},
+		loadElements = function(parent) {
+	
+			var a, e, x, i;
+	
+			// IFRAMEs.
+	
+				// Get list of unloaded IFRAMEs.
+					a = parent.querySelectorAll('iframe[data-src]:not([data-src=""])');
+	
+				// Step through list.
+					for (i=0; i < a.length; i++) {
+	
+						// Load.
+							a[i].src = a[i].dataset.src;
+	
+						// Mark as loaded.
+							a[i].dataset.src = "";
+	
+					}
+	
+			// Video.
+	
+				// Get list of videos (autoplay).
+					a = parent.querySelectorAll('video[autoplay]');
+	
+				// Step through list.
+					for (i=0; i < a.length; i++) {
+	
+						// Play if paused.
+							if (a[i].paused)
+								a[i].play();
+	
+					}
+	
+			// Autofocus.
+	
+				// Get first element with data-autofocus attribute.
+					e = parent.querySelector('[data-autofocus="1"]');
+	
+				// Determine type.
+					x = e ? e.tagName : null;
+	
+					switch (x) {
+	
+						case 'FORM':
+	
+							// Get first input.
+								e = e.querySelector('.field input, .field select, .field textarea');
+	
+							// Found? Focus.
+								if (e)
+									e.focus();
+	
+							break;
+	
+						default:
+							break;
+	
+					}
+	
+		},
+		unloadElements = function(parent) {
+	
+			var a, e, x, i;
+	
+			// IFRAMEs.
+	
+				// Get list of loaded IFRAMEs.
+					a = parent.querySelectorAll('iframe[data-src=""]');
+	
+				// Step through list.
+					for (i=0; i < a.length; i++) {
+	
+						// Don't unload? Skip.
+							if (a[i].dataset.srcUnload === '0')
+								continue;
+	
+						// Mark as unloaded.
+							a[i].dataset.src = a[i].src;
+	
+						// Unload.
+							a[i].src = '';
+	
+					}
+	
+			// Video.
+	
+				// Get list of videos.
+					a = parent.querySelectorAll('video');
+	
+				// Step through list.
+					for (i=0; i < a.length; i++) {
+	
+						// Pause if playing.
+							if (!a[i].paused)
+								a[i].pause();
+	
+					}
+	
+			// Autofocus.
+	
+				// Get focused element.
+					e = $(':focus');
+	
+				// Found? Blur.
+					if (e)
+						e.blur();
+	
+	
 		};
 	
 		// Expose scrollToElement.
@@ -306,7 +421,7 @@
 		(function() {
 	
 			var initialSection, initialScrollPoint, initialId,
-				header, footer, name, hideHeader, hideFooter,
+				header, footer, name, hideHeader, hideFooter, disableAutoScroll,
 				h, e, ee, k,
 				locked = false,
 				doNext = function() {
@@ -355,61 +470,6 @@
 						return;
 	
 					location.href = '#' + section.id.replace(/-section$/, '');
-	
-				},
-				loadElements = function(parent) {
-	
-					var a, i;
-	
-					// IFRAMEs.
-	
-						// Get list of unloaded IFRAMEs.
-							a = parent.querySelectorAll('iframe[data-src]:not([data-src=""])');
-	
-						// Step through list.
-							for (i=0; i < a.length; i++) {
-	
-								// Load.
-									a[i].src = a[i].dataset.src;
-	
-								// Mark as loaded.
-									a[i].dataset.src = "";
-	
-							}
-	
-				},
-				unloadElements = function(parent) {
-	
-					var a, i;
-	
-					// IFRAMEs.
-	
-						// Get list of loaded IFRAMEs.
-							a = parent.querySelectorAll('iframe[data-src=""]');
-	
-						// Step through list.
-							for (i=0; i < a.length; i++) {
-	
-								// Mark as unloaded.
-									a[i].dataset.src = a[i].src;
-	
-								// Unload.
-									a[i].src = '';
-	
-							}
-	
-					// Video.
-	
-						// Get list of videos.
-							a = parent.querySelectorAll('video');
-	
-						// Step through list.
-							for (i=0; i < a.length; i++) {
-	
-								// Pause.
-									a[i].pause();
-	
-							}
 	
 				},
 				doEvent = function(id, type) {
@@ -526,12 +586,15 @@
 	
 							}
 	
+					// Get options.
+						name = (h ? h : 'home');
+						hideHeader = name ? ((name in sections) && ('hideHeader' in sections[name]) && sections[name].hideHeader) : false;
+						hideFooter = name ? ((name in sections) && ('hideFooter' in sections[name]) && sections[name].hideFooter) : false;
+						disableAutoScroll = name ? ((name in sections) && ('disableAutoScroll' in sections[name]) && sections[name].disableAutoScroll) : false;
+	
 					// Deactivate all sections (except initial).
 	
 						// Initially hide header and/or footer (if necessary).
-							name = (h ? h : 'home');
-							hideHeader = name ? ((name in sections) && ('hideHeader' in sections[name]) && sections[name].hideHeader) : false;
-							hideFooter = name ? ((name in sections) && ('hideFooter' in sections[name]) && sections[name].hideFooter) : false;
 	
 							// Header.
 								if (header && hideHeader) {
@@ -568,8 +631,9 @@
 					// Load elements.
 						loadElements(initialSection);
 	
-				 	// Scroll to top.
-						scrollToElement(null, 'instant');
+					// Scroll to top (if not disabled for this section).
+						if (!disableAutoScroll)
+							scrollToElement(null, 'instant');
 	
 				// Load event.
 					on('load', function() {
@@ -584,7 +648,7 @@
 				on('hashchange', function(event) {
 	
 					var section, scrollPoint, id, sectionHeight, currentSection, currentSectionHeight,
-						name, hideHeader, hideFooter,
+						name, hideHeader, hideFooter, disableAutoScroll,
 						h, e, ee, k;
 	
 					// Lock.
@@ -637,12 +701,16 @@
 					// Section already active?
 						if (!section.classList.contains('inactive')) {
 	
+							// Get options.
+								name = (section ? section.id.replace(/-section$/, '') : null);
+								disableAutoScroll = name ? ((name in sections) && ('disableAutoScroll' in sections[name]) && sections[name].disableAutoScroll) : false;
+	
 						 	// Scroll to scroll point (if applicable).
 						 		if (scrollPoint)
 									scrollToElement(scrollPoint);
 	
-							// Otherwise, just scroll to top.
-								else
+							// Otherwise, just scroll to top (if not disabled for this section).
+								else if (!disableAutoScroll)
 									scrollToElement(null);
 	
 							// Bail.
@@ -659,6 +727,10 @@
 							// Clear index URL hash.
 								if (location.hash == '#home')
 									history.replaceState(null, null, '#');
+	
+							// Get options.
+								name = (section ? section.id.replace(/-section$/, '') : null);
+								disableAutoScroll = name ? ((name in sections) && ('disableAutoScroll' in sections[name]) && sections[name].disableAutoScroll) : false;
 	
 							// Deactivate current section.
 								currentSection = $('section:not(.inactive)');
@@ -691,8 +763,9 @@
 									// Trigger 'resize' event.
 										trigger('resize');
 	
-									// Scroll to top.
-										scrollToElement(null, 'instant');
+									// Scroll to top (if not disabled for this section).
+										if (!disableAutoScroll)
+											scrollToElement(null, 'instant');
 	
 									// Delay.
 										setTimeout(function() {
@@ -1164,15 +1237,220 @@
 	
 			}
 	
+	// Scroll events.
+		var scrollEvents = {
+	
+			/**
+			 * Items.
+			 * @var {array}
+			 */
+			items: [],
+	
+			/**
+			 * Adds an event.
+			 * @param {object} o Options.
+			 */
+			add: function(o) {
+	
+				this.items.push({
+					element: o.element,
+					enter: ('enter' in o ? o.enter : null),
+					leave: ('leave' in o ? o.leave : null),
+					mode: ('mode' in o ? o.mode : 1),
+					offset: ('offset' in o ? o.offset : 0),
+					state: false,
+				});
+	
+			},
+	
+			/**
+			 * Handler.
+			 */
+			handler: function() {
+	
+				var	height = document.documentElement.clientHeight,
+					top = (client.os == 'ios' ? document.body.scrollTop : document.documentElement.scrollTop),
+					bottom = top + height;
+	
+				// Step through items.
+					scrollEvents.items.forEach(function(item) {
+	
+						var bcr, elementTop, elementBottom, state, a, b;
+	
+						// No enter/leave handlers? Bail.
+							if (!item.enter
+							&&	!item.leave)
+								return true;
+	
+						// Not visible? Bail.
+							if (item.element.offsetParent === null)
+								return true;
+	
+						// Get element position.
+							bcr = item.element.getBoundingClientRect();
+							elementTop = top + Math.floor(bcr.top);
+							elementBottom = elementTop + bcr.height;
+	
+						// Determine state.
+							switch (item.mode) {
+	
+								// Element falls within viewport.
+									case 1:
+									default:
+	
+										// State.
+											state = (bottom > (elementTop - item.offset) && top < (elementBottom + item.offset));
+	
+										break;
+	
+								// Viewport midpoint falls within element.
+									case 2:
+	
+										// Midpoint.
+											a = (top + (height * 0.5));
+	
+										// State.
+											state = (a > (elementTop - item.offset) && a < (elementBottom + item.offset));
+	
+										break;
+	
+								// Viewport midsection falls within element.
+									case 3:
+	
+										// Upper, lower limit (25 - 75%).
+											a = top + (height * 0.25);
+											b = top + (height * 0.75);
+	
+										// State.
+											state = (b > (elementTop - item.offset) && a < (elementBottom + item.offset));
+	
+										break;
+	
+							}
+	
+						// State changed?
+							if (state != item.state) {
+	
+								// Update state.
+									item.state = state;
+	
+								// Call handler.
+									if (item.state) {
+	
+										// Enter handler exists?
+											if (item.enter) {
+	
+												// Call it.
+													(item.enter).apply(item.element);
+	
+												// No leave handler? Unbind enter handler (so we don't check this element again).
+													if (!item.leave)
+														item.enter = null;
+	
+											}
+	
+									}
+									else {
+	
+										// Leave handler exists?
+											if (item.leave) {
+	
+												// Call it.
+													(item.leave).apply(item.element);
+	
+												// No enter handler? Unbind leave handler (so we don't check this element again).
+													if (!item.enter)
+														item.leave = null;
+	
+											}
+	
+									}
+	
+							}
+	
+					});
+	
+			},
+	
+			/**
+			 * Initializes scroll events.
+			 */
+			init: function() {
+	
+				// Bind handler to events.
+					on('load', this.handler);
+					on('resize', this.handler);
+					on('scroll', this.handler);
+	
+				// Do initial handler call.
+					(this.handler)();
+	
+			}
+		};
+	
+		// Initialize.
+			scrollEvents.init();
+	
 	// Deferred.
 		(function() {
 	
 			var items = $$('.deferred'),
-				f;
+				loadHandler, enterHandler;
 	
 			// Polyfill: NodeList.forEach()
 				if (!('forEach' in NodeList.prototype))
 					NodeList.prototype.forEach = Array.prototype.forEach;
+	
+			// Handlers.
+				loadHandler = function() {
+	
+					var i = this,
+						p = this.parentElement;
+	
+					// Not "done" yet? Bail.
+						if (i.dataset.src !== 'done')
+							return;
+	
+					// Show image.
+						if (Date.now() - i._startLoad < 375) {
+	
+							p.classList.remove('loading');
+							p.style.backgroundImage = 'none';
+							i.style.transition = '';
+							i.style.opacity = 1;
+	
+						}
+						else {
+	
+							p.classList.remove('loading');
+							i.style.opacity = 1;
+	
+							setTimeout(function() {
+								i.style.backgroundImage = 'none';
+							}, 375);
+	
+						}
+	
+				};
+	
+				enterHandler = function() {
+	
+					var	i = this,
+						p = this.parentElement,
+						src;
+	
+					// Get src, mark as "done".
+						src = i.dataset.src;
+						i.dataset.src = 'done';
+	
+					// Mark parent as loading.
+						p.classList.add('loading');
+	
+					// Swap placeholder for real image src.
+						i._startLoad = Date.now();
+						i.src = src;
+	
+				};
 	
 			// Initialize items.
 				items.forEach(function(p) {
@@ -1190,86 +1468,16 @@
 						i.style.transition = 'opacity 0.375s ease-in-out';
 	
 					// Load event.
-						i.addEventListener('load', function(event) {
+						i.addEventListener('load', loadHandler);
 	
-							// Not "done" yet? Bail.
-								if (i.dataset.src !== 'done')
-									return;
-	
-							// Show image.
-								if (Date.now() - i._startLoad < 375) {
-	
-									p.classList.remove('loading');
-									p.style.backgroundImage = 'none';
-									i.style.transition = '';
-									i.style.opacity = 1;
-	
-								}
-								else {
-	
-									p.classList.remove('loading');
-									i.style.opacity = 1;
-	
-									setTimeout(function() {
-										p.style.backgroundImage = 'none';
-									}, 375);
-	
-								}
-	
+					// Add to scroll events.
+						scrollEvents.add({
+							element: i,
+							enter: enterHandler,
+							offset: 250
 						});
 	
 				});
-	
-			// Handler function.
-				f = function() {
-	
-					var	height = document.documentElement.clientHeight,
-						top = (client.os == 'ios' ? document.body.scrollTop : document.documentElement.scrollTop),
-						bottom = top + height;
-	
-					// Step through items.
-						items.forEach(function(p) {
-	
-							var i = p.firstElementChild;
-	
-							// Not visible? Bail.
-								if (i.offsetParent === null)
-									return true;
-	
-							// "Done" already? Bail.
-								if (i.dataset.src === 'done')
-									return true;
-	
-							// Get image position.
-								var	x = i.getBoundingClientRect(),
-									imageTop = top + Math.floor(x.top) - height,
-									imageBottom = top + Math.ceil(x.bottom) + height,
-									src;
-	
-							// Falls within viewable area of viewport?
-								if (imageTop <= bottom && imageBottom >= top) {
-	
-									// Get src, mark as "done".
-										src = i.dataset.src;
-										i.dataset.src = 'done';
-	
-									// Mark parent as loading.
-										p.classList.add('loading');
-	
-									// Swap placeholder for real image src.
-										i._startLoad = Date.now();
-										i.src = src;
-	
-								}
-	
-						});
-	
-				};
-	
-			// Add event listeners.
-				on('load', f);
-				on('resize', f);
-				on('scroll', f);
 	
 		})();
 	
