@@ -1,4 +1,5 @@
 ---
 deployment:
   tasks:
+    - /bin/rm -r /home/tuckmillcottage/public_html/*
     - /bin/cp -rT . /home/tuckmillcottage/public_html
