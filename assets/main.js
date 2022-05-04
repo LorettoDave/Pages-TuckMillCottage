@@ -14,7 +14,11 @@
 					browserVersion: 0,
 					os: 'other',
 					osVersion: 0,
-					canUse: null
+					mobile: false,
+					canUse: null,
+					flags: {
+						lsdUnits: false,
+					},
 				},
 				ua = navigator.userAgent,
 				a, i;
@@ -83,39 +87,47 @@
 					))
 						o.os = 'ios';
 	
+			// mobile.
+				o.mobile = (o.os == 'android' || o.os == 'ios');
+	
 			// canUse.
 				var _canUse = document.createElement('div');
 	
-				o.canUse = function(p) {
+				o.canUse = function(property, value) {
 	
-					var e = _canUse.style,
-						up = p.charAt(0).toUpperCase() + p.slice(1);
+					var style;
 	
-					return	(
-								p in e
-							||	('Moz' + up) in e
-							||	('Webkit' + up) in e
-							||	('O' + up) in e
-							||	('ms' + up) in e
-					);
+					// Get style.
+						style = _canUse.style;
+	
+					// Property doesn't exist? Can't use it.
+						if (!(property in style))
+							return false;
+	
+					// Value provided?
+						if (typeof value !== 'undefined') {
+	
+							// Assign value.
+								style[property] = value;
+	
+							// Value is empty? Can't use it.
+								if (style[property] == '')
+									return false;
+	
+						}
+	
+					return true;
 	
 				};
+	
+			// flags.
+				o.flags.lsdUnits = o.canUse('width', '100dvw');
 	
 			return o;
 	
 		}()),
 		trigger = function(t) {
-	
-			if (client.browser == 'ie') {
-	
-				var e = document.createEvent('Event');
-				e.initEvent(t, false, true);
-				dispatchEvent(e);
-	
-			}
-			else
-				dispatchEvent(new Event(t));
-	
+			dispatchEvent(new Event(t));
 		},
 		cssRules = function(selectorText) {
 	
@@ -406,7 +418,7 @@
 		// Expose scrollToElement.
 			window._scrollToTop = scrollToTop;
 	
-	// Animation.
+	// "On Load" animation.
 		on('load', function() {
 			setTimeout(function() {
 				$body.className = $body.className.replace(/\bis-loading\b/, 'is-playing');
@@ -488,7 +500,7 @@
 						events: {
 							onopen: [
 								function() { 
-									gtag('config', 'UA-137164796-4', { 'page_path': '/#done' });
+									gtag('config', 'G-B6J3QX79PH', { 'page_path': '/#done' });
 								},
 							],
 						},
@@ -497,7 +509,7 @@
 						events: {
 							onopen: [
 								function() { 
-									gtag('config', 'UA-137164796-4', { 'page_path': '/' });
+									gtag('config', 'G-B6J3QX79PH', { 'page_path': '/' });
 								},
 							],
 						},
@@ -630,6 +642,12 @@
 	
 					// Load elements.
 						loadElements(initialSection);
+	
+						if (header)
+							loadElements(header);
+	
+						if (footer)
+							loadElements(footer);
 	
 					// Scroll to top (if not disabled for this section).
 						if (!disableAutoScroll)
@@ -806,7 +824,8 @@
 					on('click', function(event) {
 	
 						var t = event.target,
-							tagName = t.tagName.toUpperCase();
+							tagName = t.tagName.toUpperCase(),
+							scrollPoint;
 	
 						// Find real target.
 							switch (tagName) {
@@ -838,19 +857,34 @@
 	
 							}
 	
-						// Target is an anchor *and* its href is a hash that matches the current hash?
+						// Target is an anchor *and* its href is a hash?
 							if (t.tagName == 'A'
-							&&	t.getAttribute('href').substr(0, 1) == '#'
-							&&	t.hash == window.location.hash) {
+							&&	t.getAttribute('href').substr(0, 1) == '#') {
 	
-								// Prevent default.
-									event.preventDefault();
+								// Hash matches an invisible scroll point?
+									if (!!(scrollPoint = $('[data-scroll-id="' + t.hash.substr(1) + '"][data-scroll-invisible="1"]'))) {
 	
-								// Replace state with '#'.
-									history.replaceState(undefined, undefined, '#');
+										// Prevent default.
+											event.preventDefault();
 	
-								// Replace location with target hash.
-									location.replace(t.hash);
+										// Scroll to element.
+											scrollToElement(scrollPoint);
+	
+									}
+	
+								// Hash matches the current hash?
+									else if (t.hash == window.location.hash) {
+	
+										// Prevent default.
+											event.preventDefault();
+	
+										// Replace state with '#'.
+											history.replaceState(undefined, undefined, '#');
+	
+										// Replace location with target hash.
+											location.replace(t.hash);
+	
+									}
 	
 							}
 	
@@ -870,6 +904,47 @@
 	
 			// Get sheet.
 				sheet = style.sheet;
+	
+		// Mobile.
+			if (client.mobile) {
+	
+				// Prevent overscrolling on Safari/other mobile browsers.
+				// 'vh' units don't factor in the heights of various browser UI elements so our page ends up being
+				// a lot taller than it needs to be (resulting in overscroll and issues with vertical centering).
+					(function() {
+	
+						// Lsd units available?
+							if (client.flags.lsdUnits) {
+	
+								document.documentElement.style.setProperty('--viewport-height', '100dvh');
+								document.documentElement.style.setProperty('--background-height', '100lvh');
+	
+							}
+	
+						// Otherwise, use innerHeight hack.
+							else {
+	
+								var f = function() {
+									document.documentElement.style.setProperty('--viewport-height', window.innerHeight + 'px');
+									document.documentElement.style.setProperty('--background-height', (window.innerHeight + 250) + 'px');
+								};
+	
+								on('load', f);
+								on('resize', f);
+								on('orientationchange', function() {
+	
+									// Update after brief delay.
+										setTimeout(function() {
+											(f)();
+										}, 100);
+	
+								});
+	
+							}
+	
+					})();
+	
+			}
 	
 		// Android.
 			if (client.os == 'android') {
@@ -945,298 +1020,6 @@
 	
 			}
 	
-		// IE.
-			else if (client.browser == 'ie') {
-	
-				// Element.matches polyfill.
-					if (!('matches' in Element.prototype))
-						Element.prototype.matches = (Element.prototype.msMatchesSelector || Element.prototype.webkitMatchesSelector);
-	
-				// Background fix.
-				// IE doesn't consistently render background images applied to body:before so as a workaround
-				// we can simply apply it directly to the body tag.
-					(function() {
-	
-						var a = cssRules('body::before'),
-							r;
-	
-						// Has a background?
-							if (a.length > 0) {
-	
-								r = a[0];
-	
-								if (r.style.width.match('calc')) {
-	
-									// Force repaint.
-										r.style.opacity = 0.9999;
-	
-										setTimeout(function() {
-											r.style.opacity = 1;
-										}, 100);
-	
-								}
-								else {
-	
-									// Override body:before rule.
-										document.styleSheets[0].addRule('body::before', 'content: none !important;');
-	
-									// Copy over background styles.
-										$body.style.backgroundImage = r.style.backgroundImage.replace('url("images/', 'url("assets/images/');
-										$body.style.backgroundPosition = r.style.backgroundPosition;
-										$body.style.backgroundRepeat = r.style.backgroundRepeat;
-										$body.style.backgroundColor = r.style.backgroundColor;
-										$body.style.backgroundAttachment = 'fixed';
-										$body.style.backgroundSize = r.style.backgroundSize;
-	
-								}
-	
-							}
-	
-					})();
-	
-				// Flexbox workaround.
-				// IE's flexbox implementation doesn't work when 'min-height' is used, so we can work around this
-				// by switching to 'height' but simulating the behavior of 'min-height' via JS.
-					(function() {
-						var t, f;
-	
-						// Handler function.
-							f = function() {
-	
-								var mh, h, s, xx, x, i;
-	
-								// Wrapper.
-									x = $('#wrapper');
-	
-									x.style.height = 'auto';
-	
-									if (x.scrollHeight <= innerHeight)
-										x.style.height = '100vh';
-	
-								// Containers with full modifier.
-									xx = $$('.container.full');
-	
-									for (i=0; i < xx.length; i++) {
-	
-										x = xx[i];
-										s = getComputedStyle(x);
-	
-										// Get min-height.
-											x.style.minHeight = '';
-											x.style.height = '';
-	
-											mh = s.minHeight;
-	
-										// Get height.
-											x.style.minHeight = 0;
-											x.style.height = '';
-	
-											h = s.height;
-	
-										// Zero min-height? Do nothing.
-											if (mh == 0)
-												continue;
-	
-										// Set height.
-											x.style.height = (h > mh ? 'auto' : mh);
-	
-									}
-	
-							};
-	
-						// Do an initial call of the handler.
-							(f)();
-	
-						// Add event listeners.
-							on('resize', function() {
-	
-								clearTimeout(t);
-	
-								t = setTimeout(f, 250);
-	
-							});
-	
-							on('load', f);
-	
-					})();
-	
-			}
-	
-		// Edge.
-			else if (client.browser == 'edge') {
-	
-				// Columned container fix.
-				// Edge seems to miscalculate column widths in some instances resulting in a nasty wrapping bug.
-				// Workaround = left-offset the last column in each columned container by -1px.
-					(function() {
-	
-						var xx = $$('.container > .inner > div:last-child'),
-							x, y, i;
-	
-						// Step through last columns.
-							for(i=0; i < xx.length; i++) {
-	
-								x = xx[i];
-								y = getComputedStyle(x.parentNode);
-	
-								// Parent container not columned? Skip.
-									if (y.display != 'flex'
-									&&	y.display != 'inline-flex')
-										continue;
-	
-								// Offset by -1px.
-									x.style.marginLeft = '-1px';
-	
-							}
-	
-					})();
-	
-			}
-	
-		// Object-fit polyfill.
-			if (!client.canUse('object-fit')) {
-	
-				// Image.
-					(function() {
-	
-						var xx = $$('.image[data-position]'),
-							x, w, c, i, src;
-	
-						for (i=0; i < xx.length; i++) {
-	
-							// Element, img.
-								x = xx[i];
-								c = x.firstElementChild;
-	
-								// Not an IMG? Strip off wrapper.
-									if (c.tagName != 'IMG') {
-	
-										w = c;
-										c = c.firstElementChild;
-	
-									}
-	
-							// Get src.
-								if (c.parentNode.classList.contains('deferred')) {
-	
-									c.parentNode.classList.remove('deferred');
-									src = c.getAttribute('data-src');
-									c.removeAttribute('data-src');
-	
-								}
-								else
-									src = c.getAttribute('src');
-	
-							// Set src as element background.
-								c.style['backgroundImage'] = 'url(\'' + src + '\')';
-								c.style['backgroundSize'] = 'cover';
-								c.style['backgroundPosition'] = x.dataset.position;
-								c.style['backgroundRepeat'] = 'no-repeat';
-	
-							// Clear src.
-								c.src = 'data:image/svg+xml;charset=utf8,' + escape('<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1" viewBox="0 0 1 1"></svg>');
-	
-							// Hack: Fix "full column" elements (columned containers only).
-								if (x.classList.contains('full')
-								&&	(x.parentNode && x.parentNode.classList.contains('full'))
-								&&	(x.parentNode.parentNode && x.parentNode.parentNode.parentNode && x.parentNode.parentNode.parentNode.classList.contains('container'))
-								&&	x.parentNode.children.length == 1) {
-	
-									(function(x, w) {
-	
-										var	p = x.parentNode.parentNode,
-											f = function() {
-	
-												// Set height to zero.
-													x.style['height'] = '0px';
-	
-												// Clear timeout.
-													clearTimeout(t);
-	
-												// Update after a short delay.
-													t = setTimeout(function() {
-	
-														// Container inner is in "row" mode? Set fixed height.
-															if (getComputedStyle(p).flexDirection == 'row') {
-	
-																// Wrapper (if it exists).
-																	if (w)
-																		w.style['height'] = '100%';
-	
-																// Element.
-																	x.style['height'] = (p.scrollHeight + 1) + 'px';
-	
-															}
-	
-														// Otherwise, revert to auto height ...
-															else {
-	
-																// Wrapper (if it exists).
-																	if (w)
-																		w.style['height'] = 'auto';
-	
-																// Element.
-																	x.style['height'] = 'auto';
-	
-															}
-	
-													}, 125);
-	
-											},
-											t;
-	
-										// Call handler on resize, load.
-											on('resize', f);
-											on('load', f);
-	
-										// Initial call.
-											(f)();
-	
-									})(x, w);
-	
-								}
-	
-						}
-	
-					})();
-	
-				// Gallery.
-					(function() {
-	
-						var xx = $$('.gallery img'),
-							x, p, i, src;
-	
-						for (i=0;i < xx.length; i++) {
-	
-							// Img, parent.
-								x = xx[i];
-								p = x.parentNode;
-	
-							// Get src.
-								if (p.classList.contains('deferred')) {
-	
-									p.classList.remove('deferred');
-									src = x.getAttribute('data-src');
-	
-								}
-								else
-									src = x.getAttribute('src');
-	
-							// Set src as parent background.
-								p.style['backgroundImage'] = 'url(\'' + src + '\')';
-								p.style['backgroundSize'] = 'cover';
-								p.style['backgroundPosition'] = 'center';
-								p.style['backgroundRepeat'] = 'no-repeat';
-	
-							// Hide img.
-								x.style['opacity'] = '0';
-	
-						}
-	
-					})();
-	
-			}
-	
 	// Scroll events.
 		var scrollEvents = {
 	
@@ -1254,10 +1037,12 @@
 	
 				this.items.push({
 					element: o.element,
+					triggerElement: (('triggerElement' in o && o.triggerElement) ? o.triggerElement : o.element),
 					enter: ('enter' in o ? o.enter : null),
 					leave: ('leave' in o ? o.leave : null),
 					mode: ('mode' in o ? o.mode : 1),
 					offset: ('offset' in o ? o.offset : 0),
+					initialState: ('initialState' in o ? o.initialState : null),
 					state: false,
 				});
 	
@@ -1268,9 +1053,25 @@
 			 */
 			handler: function() {
 	
-				var	height = document.documentElement.clientHeight,
-					top = (client.os == 'ios' ? document.body.scrollTop : document.documentElement.scrollTop),
-					bottom = top + height;
+				var	height, top, bottom, scrollPad;
+	
+				// Determine values.
+					if (client.os == 'ios') {
+	
+						height = document.documentElement.clientHeight;
+						top = document.body.scrollTop + window.scrollY;
+						bottom = top + height;
+						scrollPad = 125;
+	
+					}
+					else {
+	
+						height = document.documentElement.clientHeight;
+						top = document.documentElement.scrollTop;
+						bottom = top + height;
+						scrollPad = 0;
+	
+					}
 	
 				// Step through items.
 					scrollEvents.items.forEach(function(item) {
@@ -1282,51 +1083,77 @@
 							&&	!item.leave)
 								return true;
 	
-						// Not visible? Bail.
-							if (item.element.offsetParent === null)
+						// No trigger element, or not visible? Bail.
+							if (!item.triggerElement
+							||	item.triggerElement.offsetParent === null)
 								return true;
 	
 						// Get element position.
-							bcr = item.element.getBoundingClientRect();
+							bcr = item.triggerElement.getBoundingClientRect();
 							elementTop = top + Math.floor(bcr.top);
 							elementBottom = elementTop + bcr.height;
 	
 						// Determine state.
-							switch (item.mode) {
 	
-								// Element falls within viewport.
-									case 1:
-									default:
+							// Initial state exists?
+								if (item.initialState !== null) {
 	
-										// State.
-											state = (bottom > (elementTop - item.offset) && top < (elementBottom + item.offset));
+									// Use it for this check.
+										state = item.initialState;
 	
-										break;
+									// Clear it.
+										item.initialState = null;
 	
-								// Viewport midpoint falls within element.
-									case 2:
+								}
 	
-										// Midpoint.
-											a = (top + (height * 0.5));
+							// Otherwise, determine state from mode/position.
+								else {
 	
-										// State.
-											state = (a > (elementTop - item.offset) && a < (elementBottom + item.offset));
+									switch (item.mode) {
 	
-										break;
+										// Element falls within viewport.
+											case 1:
+											default:
 	
-								// Viewport midsection falls within element.
-									case 3:
+												// State.
+													state = (bottom > (elementTop - item.offset) && top < (elementBottom + item.offset));
 	
-										// Upper, lower limit (25 - 75%).
-											a = top + (height * 0.25);
-											b = top + (height * 0.75);
+												break;
 	
-										// State.
-											state = (b > (elementTop - item.offset) && a < (elementBottom + item.offset));
+										// Viewport midpoint falls within element.
+											case 2:
 	
-										break;
+												// Midpoint.
+													a = (top + (height * 0.5));
 	
-							}
+												// State.
+													state = (a > (elementTop - item.offset) && a < (elementBottom + item.offset));
+	
+												break;
+	
+										// Viewport midsection falls within element.
+											case 3:
+	
+												// Upper limit (25%-).
+													a = top + (height * 0.25);
+	
+													if (a - (height * 0.375) <= 0)
+														a = 0;
+	
+												// Lower limit (-75%).
+													b = top + (height * 0.75);
+	
+													if (b + (height * 0.375) >= document.body.scrollHeight - scrollPad)
+														b = document.body.scrollHeight + scrollPad;
+	
+												// State.
+													state = (b > (elementTop - item.offset) && a < (elementBottom + item.offset));
+	
+												break;
+	
+									}
+	
+								}
 	
 						// State changed?
 							if (state != item.state) {
@@ -1397,11 +1224,11 @@
 			var items = $$('.deferred'),
 				loadHandler, enterHandler;
 	
-			// Polyfill: NodeList.forEach()
-				if (!('forEach' in NodeList.prototype))
-					NodeList.prototype.forEach = Array.prototype.forEach;
-	
 			// Handlers.
+	
+				/**
+				 * "On Load" handler.
+				 */
 				loadHandler = function() {
 	
 					var i = this,
@@ -1427,12 +1254,16 @@
 	
 							setTimeout(function() {
 								i.style.backgroundImage = 'none';
+								i.style.transition = '';
 							}, 375);
 	
 						}
 	
 				};
 	
+				/**
+				 * "On Enter" handler.
+				 */
 				enterHandler = function() {
 	
 					var	i = this,
@@ -1458,10 +1289,14 @@
 					var i = p.firstElementChild;
 	
 					// Set parent to placeholder.
-						p.style.backgroundImage = 'url(' + i.src + ')';
-						p.style.backgroundSize = '100% 100%';
-						p.style.backgroundPosition = 'top left';
-						p.style.backgroundRepeat = 'no-repeat';
+						if (!p.classList.contains('enclosed')) {
+	
+							p.style.backgroundImage = 'url(' + i.src + ')';
+							p.style.backgroundSize = '100% 100%';
+							p.style.backgroundPosition = 'top left';
+							p.style.backgroundRepeat = 'no-repeat';
+	
+						}
 	
 					// Hide image.
 						i.style.opacity = 0;
@@ -1555,6 +1390,12 @@
 			 */
 			this.navigation = null;
 		
+			/**
+			 * Mobile state.
+			 * @var {bool}
+			 */
+			this.mobile = null;
+		
 			// Init modal.
 				this.initModal();
 		
@@ -1568,24 +1409,52 @@
 		
 				var _this = this,
 					$links = $$('#' + config.id + ' .thumbnail'),
-					navigation = (config.navigation && $links.length > 1),
-					i;
+					navigation = config.navigation,
+					mobile = config.mobile,
+					i, j;
 		
-				// Initialize links.
-					for (i=0; i < $links.length; i++)
-						(function(index) {
-							$links[index].addEventListener('click', function(event) {
+				// Determine if navigation needs to be disabled (despite what our config says).
+					j = 0;
 		
-								event.stopPropagation();
-								event.preventDefault();
+					// Step through items.
+						for (i = 0; i < $links.length; i++) {
 		
-								_this.show(index, {
-									$links: $links,
-									navigation: navigation
+							// Not ignored? Increment count.
+								if ($links[i].dataset.lightboxIgnore != '1')
+									j++;
+		
+						}
+		
+					// Less than two allowed items? Disable navigation.
+						if (j < 2)
+							navigation = false;
+		
+				// Bind click events.
+					for (i=0; i < $links.length; i++) {
+		
+						// Ignored? Skip.
+							if ($links[i].dataset.lightboxIgnore == '1')
+								continue;
+		
+						// Bind click event.
+							(function(index) {
+								$links[index].addEventListener('click', function(event) {
+		
+									// Prevent default.
+										event.stopPropagation();
+										event.preventDefault();
+		
+									// Show.
+										_this.show(index, {
+											$links: $links,
+											navigation: navigation,
+											mobile: mobile
+										});
+		
 								});
+							})(i);
 		
-							});
-						})(i);
+					}
 		
 			};
 		
@@ -1636,33 +1505,93 @@
 						$modalPrevious = $('#' + this.id + '-modal .previous');
 		
 				// Methods.
-					$modal.show = function(index) {
+					$modal.show = function(index, offset) {
 		
-						var item;
+						var item,
+							i, j, found;
 		
 						// Locked? Bail.
 							if (_this.locked)
 								return;
 		
-						// Check index.
+						// No index provided? Use current.
+							if (typeof index != 'number')
+								index = _this.current;
 		
-							// Less than zero? Jump to end.
-								if (index < 0)
-									index = _this.$links.length - 1;
+						// Offset provided? Find first allowed offset item.
+							if (typeof offset == 'number') {
 		
-							// Greater than length? Jump to beginning.
-								else if (index >= _this.$links.length)
-									index = 0;
+								found = false;
+								j = 0;
 		
-							// Already there? Bail.
-								if (index == _this.current)
-									return;
+								// Step through items using offset (up to item count).
+									for (j = 0; j < _this.$links.length; j++) {
 		
-						// Get item.
-							item = _this.$links.item(index);
+										// Increment index by offset.
+											index += offset;
 		
-							if (!item)
-								return;
+										// Less than zero? Jump to end.
+											if (index < 0)
+												index = _this.$links.length - 1;
+		
+										// Greater than length? Jump to beginning.
+											else if (index >= _this.$links.length)
+												index = 0;
+		
+										// Already there? Bail.
+											if (index == _this.current)
+												break;
+		
+										// Get item.
+											item = _this.$links.item(index);
+		
+											if (!item)
+												break;
+		
+										// Not ignored? Found!
+											if (item.dataset.lightboxIgnore != '1') {
+		
+												found = true;
+												break;
+		
+											}
+		
+									}
+		
+								// Couldn't find an allowed item? Bail.
+									if (!found)
+										return;
+		
+							}
+		
+						// Otherwise, see if requested item is allowed.
+							else {
+		
+								// Check index.
+		
+									// Less than zero? Jump to end.
+										if (index < 0)
+											index = _this.$links.length - 1;
+		
+									// Greater than length? Jump to beginning.
+										else if (index >= _this.$links.length)
+											index = 0;
+		
+									// Already there? Bail.
+										if (index == _this.current)
+											return;
+		
+								// Get item.
+									item = _this.$links.item(index);
+		
+									if (!item)
+										return;
+		
+								// Ignored? Bail.
+									if (item.dataset.lightboxIgnore == '1')
+										return;
+		
+							}
 		
 						// Lock.
 							_this.locked = true;
@@ -1761,11 +1690,11 @@
 					};
 		
 					$modal.next = function() {
-						$modal.show(_this.current + 1);
+						$modal.show(null, 1);
 					};
 		
 					$modal.previous = function() {
-						$modal.show(_this.current - 1);
+						$modal.show(null, -1);
 					};
 		
 					$modal.first = function() {
@@ -1777,10 +1706,13 @@
 					};
 		
 				// Events.
+					$modal.addEventListener('touchmove', function(event) {
+						event.preventDefault();
+					});
+		
 					$modal.addEventListener('click', function(event) {
 						$modal.hide();
 					});
-		
 		
 					$modal.addEventListener('keydown', function(event) {
 		
@@ -1882,6 +1814,7 @@
 				// Update config.
 					this.$links = config.$links;
 					this.navigation = config.navigation;
+					this.mobile = config.mobile;
 		
 					if (this.navigation) {
 		
@@ -1896,6 +1829,10 @@
 		
 					}
 		
+				// Mobile and not permitted? Bail.
+					if (client.mobile && !this.mobile)
+						return;
+		
 				// Show modal.
 					this.$modal.show(href);
 		
@@ -1906,7 +1843,8 @@
 	// Gallery: gallery01.
 		_lightboxGallery.init({
 			id: 'gallery01',
-			navigation: true
+			navigation: true,
+			mobile: true
 		});
 
 })();
