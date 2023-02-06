@@ -11,10 +11,6 @@ body {
 	overflow-x: hidden;
 	word-wrap: break-word;
 	background-color: #F7F7F7;
-	background-image: url('');
-	background-size: 256px;
-	background-position: center;
-	background-repeat: repeat;
 }
 
 :root {
@@ -22,6 +18,8 @@ body {
 	--site-language-alignment: left;
 	--site-language-direction: ltr;
 	--site-language-flex-alignment: flex-start;
+	--site-language-indent-left: 1;
+	--site-language-indent-right: 0;
 	--viewport-height: 100vh;
 }
 
@@ -93,6 +91,8 @@ a {
 #main {
 	--alignment: left;
 	--flex-alignment: flex-start;
+	--indent-left: 1;
+	--indent-right: 0;
 	--border-radius-tl: 0;
 	--border-radius-tr: 0;
 	--border-radius-br: 0;
@@ -305,7 +305,7 @@ h1.style3 a:hover, h2.style3 a:hover, h3.style3 a:hover, p.style3 a:hover {
 	text-decoration: none;
 }
 
-h1.style3, h2.style3, h3.style3, p.style3 span.p:nth-child(n + 2) {
+h1.style3 span.p:nth-child(n + 2), h2.style3 span.p:nth-child(n + 2), h3.style3 span.p:nth-child(n + 2), p.style3 span.p:nth-child(n + 2) {
 	margin-top: 1rem;
 }
 
@@ -325,7 +325,7 @@ h1.style4 a:hover, h2.style4 a:hover, h3.style4 a:hover, p.style4 a:hover {
 	text-decoration: none;
 }
 
-h1.style4, h2.style4, h3.style4, p.style4 span.p:nth-child(n + 2) {
+h1.style4 span.p:nth-child(n + 2), h2.style4 span.p:nth-child(n + 2), h3.style4 span.p:nth-child(n + 2), p.style4 span.p:nth-child(n + 2) {
 	margin-top: 1rem;
 }
 
@@ -346,7 +346,7 @@ h1.style2 a:hover, h2.style2 a:hover, h3.style2 a:hover, p.style2 a:hover {
 	text-decoration: none;
 }
 
-h1.style2, h2.style2, h3.style2, p.style2 span.p:nth-child(n + 2) {
+h1.style2 span.p:nth-child(n + 2), h2.style2 span.p:nth-child(n + 2), h3.style2 span.p:nth-child(n + 2), p.style2 span.p:nth-child(n + 2) {
 	margin-top: 1rem;
 }
 
@@ -366,7 +366,7 @@ h1.style5 a:hover, h2.style5 a:hover, h3.style5 a:hover, p.style5 a:hover {
 	text-decoration: none;
 }
 
-h1.style5, h2.style5, h3.style5, p.style5 span.p:nth-child(n + 2) {
+h1.style5 span.p:nth-child(n + 2), h2.style5 span.p:nth-child(n + 2), h3.style5 span.p:nth-child(n + 2), p.style5 span.p:nth-child(n + 2) {
 	margin-top: 1rem;
 }
 
@@ -388,7 +388,7 @@ h1.style1 a:hover, h2.style1 a:hover, h3.style1 a:hover, p.style1 a:hover {
 	text-decoration: none;
 }
 
-h1.style1, h2.style1, h3.style1, p.style1 span.p:nth-child(n + 2) {
+h1.style1 span.p:nth-child(n + 2), h2.style1 span.p:nth-child(n + 2), h3.style1 span.p:nth-child(n + 2), p.style1 span.p:nth-child(n + 2) {
 	margin-top: 1rem;
 }
 
@@ -618,6 +618,8 @@ h1.style1, h2.style1, h3.style1, p.style1 span.p:nth-child(n + 2) {
 .container.style3 {
 	--alignment: center;
 	--flex-alignment: center;
+	--indent-left: 1;
+	--indent-right: 1;
 	display: flex;
 	width: 100%;
 	min-height: var(--viewport-height);
@@ -693,7 +695,7 @@ body.is-touch .container.style3 {
 
 .container.style3.default > .wrapper > .inner > .full {
 	margin-left: calc(var(--padding-horizontal) * -1);
-	max-width: none;
+	max-width: none !important;
 	width: calc(100% + (var(--padding-horizontal) * 2) + 0.4725px);
 }
 
@@ -711,7 +713,7 @@ body.is-touch .container.style3 {
 
 .container.style3.columns > .wrapper > .inner > div > .full {
 	margin-left: calc(var(--gutters) * -0.5);
-	max-width: none;
+	max-width: none !important;
 	width: calc(100% + var(--gutters) + 0.4725px);
 }
 
@@ -769,16 +771,14 @@ body.is-touch .container.style3 {
 .container.style2 {
 	--alignment: center;
 	--flex-alignment: center;
+	--indent-left: 1;
+	--indent-right: 1;
 	display: flex;
 	width: 100%;
 	min-height: 20rem;
 	align-items: center;
 	justify-content: center;
 	background-color: #FFFFFF;
-	background-image: url('');
-	background-size: 256px;
-	background-position: center;
-	background-repeat: repeat;
 	box-shadow: 0rem 1rem 5.125rem 0rem rgba(0,0,0,0.11);
 	border-radius: 0.375rem;
 }
@@ -842,7 +842,7 @@ body.is-touch .container.style3 {
 
 .container.style2.default > .wrapper > .inner > .full {
 	margin-left: calc(var(--padding-horizontal) * -1);
-	max-width: none;
+	max-width: none !important;
 	width: calc(100% + (var(--padding-horizontal) * 2) + 0.4725px);
 }
 
@@ -860,7 +860,7 @@ body.is-touch .container.style3 {
 
 .container.style2.columns > .wrapper > .inner > div > .full {
 	margin-left: calc(var(--gutters) * -0.5);
-	max-width: none;
+	max-width: none !important;
 	width: calc(100% + var(--gutters) + 0.4725px);
 }
 
@@ -909,40 +909,42 @@ body.is-touch .container.style3 {
 }
 
 #container01 > .wrapper > .inner > :nth-child(1) {
-	width: calc(50% + 4rem);
+	width: calc(50% + (var(--gutters) / 2));
 }
 
 #container01 > .wrapper > .inner > :nth-child(2) {
-	width: calc(50% + 4rem);
+	width: calc(50% + (var(--gutters) / 2));
 }
 
 #container03 > .wrapper > .inner > :nth-child(1) {
-	width: calc(50% + 4rem);
+	width: calc(50% + (var(--gutters) / 2));
 }
 
 #container03 > .wrapper > .inner > :nth-child(2) {
-	width: calc(50% + 4rem);
+	width: calc(50% + (var(--gutters) / 2));
 }
 
 #container09 > .wrapper > .inner > :nth-child(1) {
-	width: calc(50% + 4rem);
+	width: calc(50% + (var(--gutters) / 2));
 }
 
 #container09 > .wrapper > .inner > :nth-child(2) {
-	width: calc(50% + 4rem);
+	width: calc(50% + (var(--gutters) / 2));
 }
 
 #container04 > .wrapper > .inner > :nth-child(1) {
-	width: calc(50% + 4rem);
+	width: calc(50% + (var(--gutters) / 2));
 }
 
 #container04 > .wrapper > .inner > :nth-child(2) {
-	width: calc(50% + 4rem);
+	width: calc(50% + (var(--gutters) / 2));
 }
 
 .container.style1 {
 	--alignment: center;
 	--flex-alignment: center;
+	--indent-left: 1;
+	--indent-right: 1;
 }
 
 .container.style1 > .wrapper {
@@ -950,10 +952,6 @@ body.is-touch .container.style3 {
 	margin: 0 auto 0 auto;
 	width: 32rem;
 	background-color: #FFFFFF;
-	background-image: url('');
-	background-size: 256px;
-	background-position: center;
-	background-repeat: repeat;
 	box-shadow: 0rem 1rem 5.125rem 0rem rgba(0,0,0,0.11);
 	border-radius: 0.375rem;
 }
@@ -1012,7 +1010,7 @@ body.is-touch .container.style3 {
 
 .container.style1.default > .wrapper > .inner > .full {
 	margin-left: calc(var(--padding-horizontal) * -1);
-	max-width: none;
+	max-width: none !important;
 	width: calc(100% + (var(--padding-horizontal) * 2) + 0.4725px);
 }
 
@@ -1030,7 +1028,7 @@ body.is-touch .container.style3 {
 
 .container.style1.columns > .wrapper > .inner > div > .full {
 	margin-left: calc(var(--gutters) * -0.5);
-	max-width: none;
+	max-width: none !important;
 	width: calc(100% + var(--gutters) + 0.4725px);
 }
 
@@ -1081,6 +1079,8 @@ body.is-touch .container.style3 {
 #container06 {
 	--alignment: center;
 	--flex-alignment: center;
+	--indent-left: 1;
+	--indent-right: 1;
 	display: flex;
 	width: 100%;
 	align-items: center;
@@ -1155,7 +1155,7 @@ body.is-touch .container.style3 {
 
 #container06.default > .wrapper > .inner > .full {
 	margin-left: calc(var(--padding-horizontal) * -1);
-	max-width: none;
+	max-width: none !important;
 	width: calc(100% + (var(--padding-horizontal) * 2) + 0.4725px);
 }
 
@@ -1173,7 +1173,7 @@ body.is-touch .container.style3 {
 
 #container06.columns > .wrapper > .inner > div > .full {
 	margin-left: calc(var(--gutters) * -0.5);
-	max-width: none;
+	max-width: none !important;
 	width: calc(100% + var(--gutters) + 0.4725px);
 }
 
@@ -1249,7 +1249,7 @@ body.is-touch .container.style3 {
 }
 
 .buttons.style1 li a {
-	display: flex;
+	display: inline-block;
 	width: auto;
 	height: 3rem;
 	line-height: 3rem;
@@ -1263,6 +1263,8 @@ body.is-touch .container.style3 {
 	font-weight: 400;
 	border-radius: 0.5rem;
 	direction: var(--site-language-direction);
+	overflow: hidden;
+	text-overflow: ellipsis;
 	transition: color 0.25s ease, background-color 0.25s ease, border-color 0.25s ease;
 }
 
@@ -1343,7 +1345,8 @@ body.is-touch .container.style3 {
 	pointer-events: none;
 	position: fixed;
 	top: 0;
-	transition: opacity 0.5s ease, visibility 0.5s, z-index 0.5s;
+	touch-action: pan-x pinch-zoom;
+	transition: opacity 0.5s ease, visibility 0.5s, z-index 0.5s, background-color 0.5s ease;
 	user-select: none;
 	visibility: hidden;
 	width: 100%;
@@ -1394,7 +1397,7 @@ body.is-touch .container.style3 {
 	opacity: 0.25;
 	position: fixed;
 	top: 30%;
-	transition: opacity 0.25s ease;
+	transition: opacity 0.25s ease, transform 0.5s ease;
 	width: 8rem;
 }
 
@@ -1423,7 +1426,7 @@ body.is-touch .container.style3 {
 	position: absolute;
 	right: 0;
 	top: 0;
-	transition: opacity 0.25s ease;
+	transition: opacity 0.25s ease, transform 0.5s ease;
 	width: 6rem;
 }
 
@@ -1454,6 +1457,41 @@ body.is-touch .container.style3 {
 
 .gallery-modal.switching .inner {
 	transition: opacity 0.375s ease, transform 0.5s ease;
+}
+
+.gallery-modal.switching.from-left .inner {
+	transform: translateY(0) translateX(-1.5em);
+}
+
+.gallery-modal.switching.from-right .inner {
+	transform: translateY(0) translateX(1.5em);
+}
+
+.gallery-modal.switching.done .inner {
+	transition: opacity 0.375s ease;
+	transform: translateY(0) translateX(0);
+}
+
+.gallery-modal.zooming {
+	background-color: rgba(0,0,0,1);
+}
+
+.gallery-modal.zooming .nav.next {
+	opacity: 0;
+	pointer-events: none;
+	transform: translateX(50%);
+}
+
+.gallery-modal.zooming .nav.previous {
+	opacity: 0;
+	pointer-events: none;
+	transform: translateX(-50%) scaleX(-1);
+}
+
+.gallery-modal.zooming .close {
+	opacity: 0;
+	pointer-events: none;
+	transform: translateX(50%) translateY(-50%);
 }
 
 .gallery.style1:not(:first-child) {
@@ -1534,6 +1572,7 @@ form .field button {
 
 form .field button > svg {
 	height: 50%;
+	min-width: 100%;
 }
 
 form input[type="text"], form input[type="email"], form input[type="tel"], form input[type="number"], form textarea, form select, form .file {
@@ -1835,18 +1874,21 @@ form.style1 .file > button {
 }
 
 form.style1 .actions button {
+	display: inline-block;
 	width: 30rem;
 	height: 3.5rem;
 	line-height: 3.5rem;
-	padding: 0 1.75rem;
+	padding: 0 0.5rem;
 	text-transform: uppercase;
 	font-size: 0.75em;
 	font-family: 'Source Sans Pro', sans-serif;
 	letter-spacing: 0.225rem;
-	padding-left: calc(0.225rem + 1.75rem);
+	padding-left: calc(0.225rem + 0.5rem);
 	font-weight: 400;
 	border-radius: 0.375rem;
 	direction: var(--site-language-direction);
+	overflow: hidden;
+	text-overflow: ellipsis;
 	background-color: #12C9A8;
 	color: #FFFFFF;
 	transition: color 0.25s ease, background-color 0.25s ease, border-color 0.25s ease;
@@ -2346,38 +2388,6 @@ form.style1 .file[data-filename=""]:before {
 		min-height: auto;
 	}
 	
-	#container01 > .wrapper > .inner > :nth-child(1) {
-		width: calc(50% + 3.25rem);
-	}
-	
-	#container01 > .wrapper > .inner > :nth-child(2) {
-		width: calc(50% + 3.25rem);
-	}
-	
-	#container03 > .wrapper > .inner > :nth-child(1) {
-		width: calc(50% + 3.25rem);
-	}
-	
-	#container03 > .wrapper > .inner > :nth-child(2) {
-		width: calc(50% + 3.25rem);
-	}
-	
-	#container09 > .wrapper > .inner > :nth-child(1) {
-		width: calc(50% + 3.25rem);
-	}
-	
-	#container09 > .wrapper > .inner > :nth-child(2) {
-		width: calc(50% + 3.25rem);
-	}
-	
-	#container04 > .wrapper > .inner > :nth-child(1) {
-		width: calc(50% + 3.25rem);
-	}
-	
-	#container04 > .wrapper > .inner > :nth-child(2) {
-		width: calc(50% + 3.25rem);
-	}
-	
 	
 	
 	.container.style1 > .wrapper > .inner {
@@ -2576,6 +2586,10 @@ form.style1 .file[data-filename=""]:before {
 		width: auto;
 	}
 	
+	.buttons.style1 {
+		gap: 0.75rem;
+	}
+	
 	.buttons.style1 li a {
 		letter-spacing: 0.225rem;
 		padding-left: calc(0.225rem + 1.5rem);
@@ -2627,7 +2641,7 @@ form.style1 .file[data-filename=""]:before {
 	form.style1 .actions button {
 		font-size: 0.75em;
 		letter-spacing: 0.225rem;
-		padding-left: calc(0.225rem + 1.75rem);
+		padding-left: calc(0.225rem + 0.5rem);
 	}
 }
 
@@ -2662,7 +2676,6 @@ form.style1 .file[data-filename=""]:before {
 	}
 	
 	.buttons.style1 li a {
-		display: inline-flex;
 		max-width: 32rem;
 		width: 100%;
 	}
@@ -2750,38 +2763,6 @@ form.style1 .file[data-filename=""]:before {
 	
 	.container.style2.columns > .wrapper > .inner > .full {
 		min-height: 10rem;
-	}
-	
-	#container01 > .wrapper > .inner > :nth-child(1) {
-		width: calc(50% + 3.25rem);
-	}
-	
-	#container01 > .wrapper > .inner > :nth-child(2) {
-		width: calc(50% + 3.25rem);
-	}
-	
-	#container03 > .wrapper > .inner > :nth-child(1) {
-		width: calc(50% + 3.25rem);
-	}
-	
-	#container03 > .wrapper > .inner > :nth-child(2) {
-		width: calc(50% + 3.25rem);
-	}
-	
-	#container09 > .wrapper > .inner > :nth-child(1) {
-		width: calc(50% + 3.25rem);
-	}
-	
-	#container09 > .wrapper > .inner > :nth-child(2) {
-		width: calc(50% + 3.25rem);
-	}
-	
-	#container04 > .wrapper > .inner > :nth-child(1) {
-		width: calc(50% + 3.25rem);
-	}
-	
-	#container04 > .wrapper > .inner > :nth-child(2) {
-		width: calc(50% + 3.25rem);
 	}
 	
 	.container.style1 > .wrapper > .inner {

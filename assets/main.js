@@ -317,10 +317,13 @@
 					for (i=0; i < a.length; i++) {
 	
 						// Load.
-							a[i].src = a[i].dataset.src;
+							a[i].contentWindow.location.replace(a[i].dataset.src);
+	
+						// Save initial src.
+							a[i].dataset.initialSrc = a[i].dataset.src;
 	
 						// Mark as loaded.
-							a[i].dataset.src = "";
+							a[i].dataset.src = '';
 	
 					}
 	
@@ -382,10 +385,17 @@
 								continue;
 	
 						// Mark as unloaded.
-							a[i].dataset.src = a[i].src;
+	
+							// IFRAME was previously loaded by loadElements()? Use initialSrc.
+								if ('initialSrc' in a[i].dataset)
+									a[i].dataset.src = a[i].dataset.initialSrc;
+	
+							// Otherwise, just use src.
+								else
+									a[i].dataset.src = a[i].src;
 	
 						// Unload.
-							a[i].src = '';
+							a[i].contentWindow.location.replace('about:blank');
 	
 					}
 	
@@ -421,10 +431,15 @@
 	// "On Load" animation.
 		on('load', function() {
 			setTimeout(function() {
-				$body.className = $body.className.replace(/\bis-loading\b/, 'is-playing');
+	
+				$body.classList.remove('is-loading');
+				$body.classList.add('is-playing');
 	
 				setTimeout(function() {
-					$body.className = $body.className.replace(/\bis-playing\b/, 'is-ready');
+	
+					$body.classList.remove('is-playing');
+					$body.classList.add('is-ready');
+	
 				}, 1000);
 			}, 100);
 		});
@@ -436,7 +451,180 @@
 				header, footer, name, hideHeader, hideFooter, disableAutoScroll,
 				h, e, ee, k,
 				locked = false,
-				doNext = function() {
+				scrollPointParent = function(target) {
+	
+					while (target) {
+	
+						if (target.parentElement
+						&&	target.parentElement.tagName == 'SECTION')
+							break;
+	
+						target = target.parentElement;
+	
+					}
+	
+					return target;
+	
+				},
+				doNextScrollPoint = function(event) {
+	
+					var e, target, id;
+	
+					// Prevent default.
+						event.preventDefault();
+						event.stopPropagation();
+	
+					// Determine parent element.
+						e = scrollPointParent(event.target);
+	
+						if (!e)
+							return;
+	
+					// Find next scroll point.
+						while (e && e.nextElementSibling) {
+	
+							e = e.nextElementSibling;
+	
+							if (e.dataset.scrollId) {
+	
+								target = e;
+								id = e.dataset.scrollId;
+								break;
+	
+							}
+	
+						}
+	
+						if (!target
+						||	!id)
+							return;
+	
+					// Redirect.
+						if (target.dataset.scrollInvisible == '1')
+							scrollToElement(target);
+						else
+							location.href = '#' + id;
+	
+				},
+				doPreviousScrollPoint = function(e) {
+	
+					var e, target, id;
+	
+					// Prevent default.
+						event.preventDefault();
+						event.stopPropagation();
+	
+					// Determine parent element.
+						e = scrollPointParent(event.target);
+	
+						if (!e)
+							return;
+	
+					// Find previous scroll point.
+						while (e && e.previousElementSibling) {
+	
+							e = e.previousElementSibling;
+	
+							if (e.dataset.scrollId) {
+	
+								target = e;
+								id = e.dataset.scrollId;
+								break;
+	
+							}
+	
+						}
+	
+						if (!target
+						||	!id)
+							return;
+	
+					// Redirect.
+						if (target.dataset.scrollInvisible == '1')
+							scrollToElement(target);
+						else
+							location.href = '#' + id;
+	
+				},
+				doFirstScrollPoint = function(e) {
+	
+					var e, target, id;
+	
+					// Prevent default.
+						event.preventDefault();
+						event.stopPropagation();
+	
+					// Determine parent element.
+						e = scrollPointParent(event.target);
+	
+						if (!e)
+							return;
+	
+					// Find first scroll point.
+						while (e && e.previousElementSibling) {
+	
+							e = e.previousElementSibling;
+	
+							if (e.dataset.scrollId) {
+	
+								target = e;
+								id = e.dataset.scrollId;
+	
+							}
+	
+						}
+	
+						if (!target
+						||	!id)
+							return;
+	
+					// Redirect.
+						if (target.dataset.scrollInvisible == '1')
+							scrollToElement(target);
+						else
+							location.href = '#' + id;
+	
+				},
+				doLastScrollPoint = function(e) {
+	
+					var e, target, id;
+	
+					// Prevent default.
+						event.preventDefault();
+						event.stopPropagation();
+	
+					// Determine parent element.
+						e = scrollPointParent(event.target);
+	
+						if (!e)
+							return;
+	
+					// Find last scroll point.
+						while (e && e.nextElementSibling) {
+	
+							e = e.nextElementSibling;
+	
+							if (e.dataset.scrollId) {
+	
+								target = e;
+								id = e.dataset.scrollId;
+	
+							}
+	
+						}
+	
+						if (!target
+						||	!id)
+							return;
+	
+					// Redirect.
+						if (target.dataset.scrollInvisible == '1')
+							scrollToElement(target);
+						else
+							location.href = '#' + id;
+	
+				},
+				doNextSection = function() {
 	
 					var section;
 	
@@ -448,7 +636,7 @@
 					location.href = '#' + section.id.replace(/-section$/, '');
 	
 				},
-				doPrevious = function() {
+				doPreviousSection = function() {
 	
 					var section;
 	
@@ -460,7 +648,7 @@
 					location.href = '#' + (section.matches(':first-child') ? '' : section.id.replace(/-section$/, ''));
 	
 				},
-				doFirst = function() {
+				doFirstSection = function() {
 	
 					var section;
 	
@@ -472,7 +660,7 @@
 					location.href = '#' + section.id.replace(/-section$/, '');
 	
 				},
-				doLast = function() {
+				doLastSection = function() {
 	
 					var section;
 	
@@ -482,6 +670,113 @@
 						return;
 	
 					location.href = '#' + section.id.replace(/-section$/, '');
+	
+				},
+				activateSection = function(section, scrollPoint) {
+	
+					var sectionHeight, currentSection, currentSectionHeight,
+						name, hideHeader, hideFooter, disableAutoScroll,
+						ee, k;
+	
+					// Section already active?
+						if (!section.classList.contains('inactive')) {
+	
+							// Get options.
+								name = (section ? section.id.replace(/-section$/, '') : null);
+								disableAutoScroll = name ? ((name in sections) && ('disableAutoScroll' in sections[name]) && sections[name].disableAutoScroll) : false;
+	
+							// Scroll to scroll point (if applicable).
+								if (scrollPoint)
+									scrollToElement(scrollPoint);
+	
+							// Otherwise, just scroll to top (if not disabled for this section).
+								else if (!disableAutoScroll)
+									scrollToElement(null);
+	
+							// Bail.
+								return false;
+	
+						}
+	
+					// Otherwise, activate it.
+						else {
+	
+							// Lock.
+								locked = true;
+	
+							// Clear index URL hash.
+								if (location.hash == '#home')
+									history.replaceState(null, null, '#');
+	
+							// Get options.
+								name = (section ? section.id.replace(/-section$/, '') : null);
+								disableAutoScroll = name ? ((name in sections) && ('disableAutoScroll' in sections[name]) && sections[name].disableAutoScroll) : false;
+	
+							// Deactivate current section.
+								currentSection = $('section:not(.inactive)');
+	
+								if (currentSection) {
+	
+									// Deactivate.
+										currentSection.classList.add('inactive');
+	
+									// Unload elements.
+										unloadElements(currentSection);
+	
+										// Event: On Close.
+											doEvent(currentSection.id, 'onclose');
+	
+									// Hide.
+										setTimeout(function() {
+											currentSection.style.display = 'none';
+											currentSection.classList.remove('active');
+										}, 62.5);
+	
+								}
+	
+							// Activate target section.
+								setTimeout(function() {
+	
+									// Show.
+										section.style.display = '';
+	
+									// Trigger 'resize' event.
+										trigger('resize');
+	
+									// Scroll to top (if not disabled for this section).
+										if (!disableAutoScroll)
+											scrollToElement(null, 'instant');
+	
+									// Delay.
+										setTimeout(function() {
+	
+											// Activate.
+												section.classList.remove('inactive');
+												section.classList.add('active');
+	
+												// Event: On Open.
+													doEvent(section.id, 'onopen');
+	
+											// Delay.
+												setTimeout(function() {
+	
+													// Load elements.
+														loadElements(section);
+	
+												 	// Scroll to scroll point (if applicable).
+												 		if (scrollPoint)
+															scrollToElement(scrollPoint, 'instant');
+	
+													// Unlock.
+														locked = false;
+	
+												}, 125);
+	
+										}, 75);
+	
+								}, 62.5);
+	
+						}
 	
 				},
 				doEvent = function(id, type) {
@@ -500,7 +795,7 @@
 						events: {
 							onopen: [
 								function() { 
-									gtag('config', 'G-B6J3QX79PH', { 'page_path': '/#done' });
+									gtag('config', 'G-NBLZ8YXVTK', { 'page_path': '/#done' });
 								},
 							],
 						},
@@ -509,18 +804,24 @@
 						events: {
 							onopen: [
 								function() { 
-									gtag('config', 'G-B6J3QX79PH', { 'page_path': '/' });
+									gtag('config', 'G-NBLZ8YXVTK', { 'page_path': '/' });
 								},
 							],
 						},
 					},
 				};
 	
-			// Expose doNext, doPrevious, doFirst, doLast.
-				window._next = doNext;
-				window._previous = doPrevious;
-				window._first = doFirst;
-				window._last = doLast;
+			// Expose doNextScrollPoint, doPreviousScrollPoint, doFirstScrollPoint, doLastScrollPoint.
+				window._nextScrollPoint = doNextScrollPoint;
+				window._previousScrollPoint = doPreviousScrollPoint;
+				window._firstScrollPoint = doFirstScrollPoint;
+				window._lastScrollPoint = doLastScrollPoint;
+	
+			// Expose doNextSection, doPreviousSection, doFirstSection, doLastSection.
+				window._nextSection = doNextSection;
+				window._previousSection = doPreviousSection;
+				window._firstSection = doFirstSection;
+				window._lastSection = doLastSection;
 	
 			// Override exposed scrollToTop.
 				window._scrollToTop = function() {
@@ -665,9 +966,8 @@
 			// Hashchange event.
 				on('hashchange', function(event) {
 	
-					var section, scrollPoint, id, sectionHeight, currentSection, currentSectionHeight,
-						name, hideHeader, hideFooter, disableAutoScroll,
-						h, e, ee, k;
+					var section, scrollPoint,
+						h, e;
 	
 					// Lock.
 						if (locked)
@@ -686,7 +986,6 @@
 	
 								scrollPoint = e;
 								section = scrollPoint.parentElement;
-								id = section.id;
 	
 							}
 	
@@ -695,7 +994,6 @@
 	
 								scrollPoint = null;
 								section = e;
-								id = section.id;
 	
 							}
 	
@@ -705,7 +1003,6 @@
 								// Default to index.
 									scrollPoint = null;
 									section = $('#' + 'home' + '-section');
-									id = section.id;
 	
 								// Clear index URL hash.
 									history.replaceState(undefined, undefined, '#');
@@ -716,105 +1013,8 @@
 						if (!section)
 							return false;
 	
-					// Section already active?
-						if (!section.classList.contains('inactive')) {
-	
-							// Get options.
-								name = (section ? section.id.replace(/-section$/, '') : null);
-								disableAutoScroll = name ? ((name in sections) && ('disableAutoScroll' in sections[name]) && sections[name].disableAutoScroll) : false;
-	
-						 	// Scroll to scroll point (if applicable).
-						 		if (scrollPoint)
-									scrollToElement(scrollPoint);
-	
-							// Otherwise, just scroll to top (if not disabled for this section).
-								else if (!disableAutoScroll)
-									scrollToElement(null);
-	
-							// Bail.
-								return false;
-	
-						}
-	
-					// Otherwise, activate it.
-						else {
-	
-							// Lock.
-								locked = true;
-	
-							// Clear index URL hash.
-								if (location.hash == '#home')
-									history.replaceState(null, null, '#');
-	
-							// Get options.
-								name = (section ? section.id.replace(/-section$/, '') : null);
-								disableAutoScroll = name ? ((name in sections) && ('disableAutoScroll' in sections[name]) && sections[name].disableAutoScroll) : false;
-	
-							// Deactivate current section.
-								currentSection = $('section:not(.inactive)');
-	
-								if (currentSection) {
-	
-									// Deactivate.
-										currentSection.classList.add('inactive');
-	
-									// Unload elements.
-										unloadElements(currentSection);
-	
-										// Event: On Close.
-											doEvent(currentSection.id, 'onclose');
-	
-									// Hide.
-										setTimeout(function() {
-											currentSection.style.display = 'none';
-											currentSection.classList.remove('active');
-										}, 62.5);
-	
-								}
-	
-							// Activate target section.
-								setTimeout(function() {
-	
-									// Show.
-										section.style.display = '';
-	
-									// Trigger 'resize' event.
-										trigger('resize');
-	
-									// Scroll to top (if not disabled for this section).
-										if (!disableAutoScroll)
-											scrollToElement(null, 'instant');
-	
-									// Delay.
-										setTimeout(function() {
-	
-											// Activate.
-												section.classList.remove('inactive');
-												section.classList.add('active');
-	
-												// Event: On Open.
-													doEvent(section.id, 'onopen');
-	
-											// Delay.
-												setTimeout(function() {
-	
-													// Load elements.
-														loadElements(section);
-	
-												 	// Scroll to scroll point (if applicable).
-												 		if (scrollPoint)
-															scrollToElement(scrollPoint, 'instant');
-	
-													// Unlock.
-														locked = false;
-	
-												}, 125);
-	
-										}, 75);
-	
-								}, 62.5);
-	
-						}
+					// Activate section.
+						activateSection(section, scrollPoint);
 	
 					return false;
 	
@@ -825,7 +1025,7 @@
 	
 						var t = event.target,
 							tagName = t.tagName.toUpperCase(),
-							scrollPoint;
+							scrollPoint, section;
 	
 						// Find real target.
 							switch (tagName) {
@@ -867,8 +1067,27 @@
 										// Prevent default.
 											event.preventDefault();
 	
-										// Scroll to element.
-											scrollToElement(scrollPoint);
+										// Get section.
+											section = scrollPoint.parentElement;
+	
+										// Section is inactive?
+											if (section.classList.contains('inactive')) {
+	
+												// Reset hash to section name (via new state).
+													history.pushState(null, null, '#' + section.id.replace(/-section$/, ''));
+	
+												// Activate section.
+													activateSection(section, scrollPoint);
+	
+											}
+	
+										// Otherwise ...
+											else {
+	
+												// Scroll to scroll point.
+													scrollToElement(scrollPoint);
+	
+											}
 	
 									}
 	
@@ -916,8 +1135,8 @@
 						// Lsd units available?
 							if (client.flags.lsdUnits) {
 	
-								document.documentElement.style.setProperty('--viewport-height', '100dvh');
-								document.documentElement.style.setProperty('--background-height', '100lvh');
+								document.documentElement.style.setProperty('--viewport-height', '100svh');
+								document.documentElement.style.setProperty('--background-height', '100dvh');
 	
 							}
 	
@@ -930,7 +1149,6 @@
 								};
 	
 								on('load', f);
-								on('resize', f);
 								on('orientationchange', function() {
 	
 									// Update after brief delay.
@@ -1020,7 +1238,6 @@
 	
 			}
 	
-	// Scroll events.
 		var scrollEvents = {
 	
 			/**
@@ -1040,7 +1257,7 @@
 					triggerElement: (('triggerElement' in o && o.triggerElement) ? o.triggerElement : o.element),
 					enter: ('enter' in o ? o.enter : null),
 					leave: ('leave' in o ? o.leave : null),
-					mode: ('mode' in o ? o.mode : 1),
+					mode: ('mode' in o ? o.mode : 3),
 					offset: ('offset' in o ? o.offset : 0),
 					initialState: ('initialState' in o ? o.initialState : null),
 					state: false,
@@ -1083,10 +1300,33 @@
 							&&	!item.leave)
 								return true;
 	
-						// No trigger element, or not visible? Bail.
-							if (!item.triggerElement
-							||	item.triggerElement.offsetParent === null)
+						// No trigger element? Bail.
+							if (!item.triggerElement)
 								return true;
+	
+						// Trigger element not visible?
+							if (item.triggerElement.offsetParent === null) {
+	
+								// Current state is active *and* leave handler exists?
+									if (item.state == true
+									&&	item.leave) {
+	
+										// Reset state to false.
+											item.state = false;
+	
+										// Call it.
+											(item.leave).apply(item.element);
+	
+										// No enter handler? Unbind leave handler (so we don't check this element again).
+											if (!item.enter)
+												item.leave = null;
+	
+									}
+	
+								// Bail.
+									return true;
+	
+							}
 	
 						// Get element position.
 							bcr = item.triggerElement.getBoundingClientRect();
@@ -1309,7 +1549,7 @@
 						scrollEvents.add({
 							element: i,
 							enter: enterHandler,
-							offset: 250
+							offset: 250,
 						});
 	
 				});
@@ -1318,256 +1558,260 @@
 	
 	// Gallery.
 		/**
-		 * Lightbox gallery.
-		 */
+		* Lightbox gallery.
+		*/
 		function lightboxGallery() {
 		
-			var _this = this;
+		var _this = this;
 		
-			/**
-			 * ID.
-			 * @var {string}
-			 */
-			this.id = 'gallery';
+		/**
+		 * ID.
+		 * @var {string}
+		 */
+		this.id = 'gallery';
 		
-			/**
-			 * Wrapper.
-			 * @var {DOMElement}
-			 */
-			this.$wrapper = $('#' + this.id);
+		/**
+		 * Wrapper.
+		 * @var {DOMElement}
+		 */
+		this.$wrapper = $('#' + this.id);
 		
-			/**
-			 * Modal.
-			 * @var {DOMElement}
-			 */
-			this.$modal = null;
+		/**
+		 * Modal.
+		 * @var {DOMElement}
+		 */
+		this.$modal = null;
 		
-			/**
-			 * Modal image.
-			 * @var {DOMElement}
-			 */
-			this.$modalImage = null;
+		/**
+		 * Modal image.
+		 * @var {DOMElement}
+		 */
+		this.$modalImage = null;
 		
-			/**
-			 * Modal next.
-			 * @var {DOMElement}
-			 */
-			this.$modalNext = null;
+		/**
+		 * Modal next.
+		 * @var {DOMElement}
+		 */
+		this.$modalNext = null;
 		
-			/**
-			 * Modal previous.
-			 * @var {DOMElement}
-			 */
-			this.$modalPrevious = null;
+		/**
+		 * Modal previous.
+		 * @var {DOMElement}
+		 */
+		this.$modalPrevious = null;
 		
-			/**
-			 * Links.
-			 * @var {nodeList}
-			 */
-			this.$links = null;
+		/**
+		 * Links.
+		 * @var {nodeList}
+		 */
+		this.$links = null;
 		
-			/**
-			 * Lock state.
-			 * @var {bool}
-			 */
-			this.locked = false;
+		/**
+		 * Lock state.
+		 * @var {bool}
+		 */
+		this.locked = false;
 		
-			/**
-			 * Current index.
-			 * @var {integer}
-			 */
-			this.current = null;
+		/**
+		 * Current index.
+		 * @var {integer}
+		 */
+		this.current = null;
 		
-			/**
-			 * Transition delay (must match CSS).
-			 * @var {integer}
-			 */
-			this.delay = 375;
+		/**
+		 * Transition delay (must match CSS).
+		 * @var {integer}
+		 */
+		this.delay = 375;
 		
-			/**
-			 * Navigation state.
-			 * @var {bool}
-			 */
-			this.navigation = null;
+		/**
+		 * Navigation state.
+		 * @var {bool}
+		 */
+		this.navigation = null;
 		
-			/**
-			 * Mobile state.
-			 * @var {bool}
-			 */
-			this.mobile = null;
+		/**
+		 * Mobile state.
+		 * @var {bool}
+		 */
+		this.mobile = null;
 		
-			// Init modal.
-				this.initModal();
+		/**
+		 * Protect state.
+		 * @var {bool}
+		 */
+		this.protect = null;
+		
+		/**
+		 * Zoom interval ID.
+		 * @var {integer}
+		 */
+		this.zoomIntervalId = null;
+		
+		// Init modal.
+			this.initModal();
 		
 		};
 		
-			/**
-			 * Initialize.
-			 * @param {object} config Config.
-			 */
-			lightboxGallery.prototype.init = function(config) {
+		/**
+		 * Initialize.
+		 * @param {object} config Config.
+		 */
+		lightboxGallery.prototype.init = function(config) {
 		
-				var _this = this,
-					$links = $$('#' + config.id + ' .thumbnail'),
-					navigation = config.navigation,
-					mobile = config.mobile,
-					i, j;
+			var _this = this,
+				$links = $$('#' + config.id + ' .thumbnail'),
+				navigation = config.navigation,
+				mobile = config.mobile,
+				protect = ('protect' in config ? config.protect : false),
+				i, j;
 		
-				// Determine if navigation needs to be disabled (despite what our config says).
-					j = 0;
+			// Determine if navigation needs to be disabled (despite what our config says).
+				j = 0;
 		
-					// Step through items.
-						for (i = 0; i < $links.length; i++) {
+				// Step through items.
+					for (i = 0; i < $links.length; i++) {
 		
-							// Not ignored? Increment count.
-								if ($links[i].dataset.lightboxIgnore != '1')
-									j++;
-		
-						}
-		
-					// Less than two allowed items? Disable navigation.
-						if (j < 2)
-							navigation = false;
-		
-				// Bind click events.
-					for (i=0; i < $links.length; i++) {
-		
-						// Ignored? Skip.
-							if ($links[i].dataset.lightboxIgnore == '1')
-								continue;
-		
-						// Bind click event.
-							(function(index) {
-								$links[index].addEventListener('click', function(event) {
-		
-									// Prevent default.
-										event.stopPropagation();
-										event.preventDefault();
-		
-									// Show.
-										_this.show(index, {
-											$links: $links,
-											navigation: navigation,
-											mobile: mobile
-										});
-		
-								});
-							})(i);
+						// Not ignored? Increment count.
+							if ($links[i].dataset.lightboxIgnore != '1')
+								j++;
 		
 					}
 		
-			};
+				// Less than two allowed items? Disable navigation.
+					if (j < 2)
+						navigation = false;
 		
-			/**
-			 * Init modal.
-			 */
-			lightboxGallery.prototype.initModal = function() {
+			// Bind click events.
+				for (i=0; i < $links.length; i++) {
 		
-				var	_this = this,
-					$modal,
-					$modalImage,
-					$modalNext,
-					$modalPrevious;
+					// Ignored? Skip.
+						if ($links[i].dataset.lightboxIgnore == '1')
+							continue;
 		
-				// Build element.
-					$modal = document.createElement('div');
-						$modal.id = this.id + '-modal';
-						$modal.tabIndex = -1;
-						$modal.className = 'gallery-modal';
-						$modal.innerHTML = '<div class="inner"><img src="" /></div><div class="nav previous"></div><div class="nav next"></div><div class="close"></div>';
-						$body.appendChild($modal);
+					// Bind click event.
+						(function(index) {
+							$links[index].addEventListener('click', function(event) {
 		
-					// Image.
-						$modalImage = $('#' + this.id + '-modal img');
-							$modalImage.addEventListener('load', function() {
+								// Prevent default.
+									event.stopPropagation();
+									event.preventDefault();
 		
-								// Delay (wait for visible transition, if not switching).
-									setTimeout(function() {
-		
-										// No longer visible? Bail.
-											if (!$modal.classList.contains('visible'))
-												return;
-		
-										// Set loaded.
-											$modal.classList.add('loaded');
-		
-										// Clear switching after delay.
-											setTimeout(function() {
-												$modal.classList.remove('switching');
-											}, _this.delay);
-		
-									}, ($modal.classList.contains('switching') ? 0 : _this.delay));
+								// Show.
+									_this.show(index, {
+										$links: $links,
+										navigation: navigation,
+										mobile: mobile,
+										protect: protect,
+									});
 		
 							});
+						})(i);
 		
-					// Navigation.
-						$modalNext = $('#' + this.id + '-modal .next');
-						$modalPrevious = $('#' + this.id + '-modal .previous');
+				}
 		
-				// Methods.
-					$modal.show = function(index, offset) {
+		};
 		
-						var item,
-							i, j, found;
+		/**
+		 * Init modal.
+		 */
+		lightboxGallery.prototype.initModal = function() {
 		
-						// Locked? Bail.
-							if (_this.locked)
-								return;
+			var	_this = this,
+				dragStart = null,
+				dragEnd = null,
+				$modal,
+				$modalInner,
+				$modalImage,
+				$modalNext,
+				$modalPrevious;
 		
-						// No index provided? Use current.
-							if (typeof index != 'number')
-								index = _this.current;
+			// Build element.
+				$modal = document.createElement('div');
+					$modal.id = this.id + '-modal';
+					$modal.tabIndex = -1;
+					$modal.className = 'gallery-modal';
+					$modal.innerHTML = '<div class="inner"><img src="" /></div><div class="nav previous"></div><div class="nav next"></div><div class="close"></div>';
+					$body.appendChild($modal);
 		
-						// Offset provided? Find first allowed offset item.
-							if (typeof offset == 'number') {
+				// Inner.
+					$modalInner = $('#' + this.id + '-modal .inner');
 		
-								found = false;
-								j = 0;
+				// Image.
+					$modalImage = $('#' + this.id + '-modal img');
 		
-								// Step through items using offset (up to item count).
-									for (j = 0; j < _this.$links.length; j++) {
+					// Load event.
+						$modalImage.addEventListener('load', function() {
 		
-										// Increment index by offset.
-											index += offset;
+							// Mark as done.
+								$modal.classList.add('done');
 		
-										// Less than zero? Jump to end.
-											if (index < 0)
-												index = _this.$links.length - 1;
+							// Delay (wait for visible transition, if not switching).
+								setTimeout(function() {
 		
-										// Greater than length? Jump to beginning.
-											else if (index >= _this.$links.length)
-												index = 0;
+									// No longer visible? Bail.
+										if (!$modal.classList.contains('visible'))
+											return;
 		
-										// Already there? Bail.
-											if (index == _this.current)
-												break;
+									// Set loaded.
+										$modal.classList.add('loaded');
 		
-										// Get item.
-											item = _this.$links.item(index);
+									// Clear switching after delay.
+										setTimeout(function() {
+											$modal.classList.remove('switching', 'from-left', 'from-right', 'done');
+										}, _this.delay);
 		
-											if (!item)
-												break;
+								}, ($modal.classList.contains('switching') ? 0 : _this.delay));
 		
-										// Not ignored? Found!
-											if (item.dataset.lightboxIgnore != '1') {
+						});
 		
-												found = true;
-												break;
+					// Contextmenu event.
+						$modalImage.addEventListener('contextmenu', function() {
 		
-											}
+							// Protected? Prevent default.
+								if (_this.protect)
+									event.preventDefault();
 		
-									}
+						}, true);
 		
-								// Couldn't find an allowed item? Bail.
-									if (!found)
-										return;
+					// Dragstart event.
+						$modalImage.addEventListener('dragstart', function() {
 		
-							}
+							// Protected? Prevent default.
+								if (_this.protect)
+									event.preventDefault();
 		
-						// Otherwise, see if requested item is allowed.
-							else {
+						}, true);
 		
-								// Check index.
+				// Navigation.
+					$modalNext = $('#' + this.id + '-modal .next');
+					$modalPrevious = $('#' + this.id + '-modal .previous');
+		
+			// Methods.
+				$modal.show = function(index, offset, direction) {
+		
+					var item,
+						i, j, found;
+		
+					// Locked? Bail.
+						if (_this.locked)
+							return;
+		
+					// No index provided? Use current.
+						if (typeof index != 'number')
+							index = _this.current;
+		
+					// Offset provided? Find first allowed offset item.
+						if (typeof offset == 'number') {
+		
+							found = false;
+							j = 0;
+		
+							// Step through items using offset (up to item count).
+								for (j = 0; j < _this.$links.length; j++) {
+		
+									// Increment index by offset.
+										index += offset;
 		
 									// Less than zero? Jump to end.
 										if (index < 0)
@@ -1579,272 +1823,435 @@
 		
 									// Already there? Bail.
 										if (index == _this.current)
-											return;
+											break;
 		
-								// Get item.
-									item = _this.$links.item(index);
+									// Get item.
+										item = _this.$links.item(index);
 		
-									if (!item)
-										return;
+										if (!item)
+											break;
 		
-								// Ignored? Bail.
-									if (item.dataset.lightboxIgnore == '1')
-										return;
+									// Not ignored? Found!
+										if (item.dataset.lightboxIgnore != '1') {
 		
-							}
+											found = true;
+											break;
 		
-						// Lock.
-							_this.locked = true;
+										}
 		
-						// Current?
-							if (_this.current !== null) {
+								}
 		
-								// Clear loaded.
-									$modal.classList.remove('loaded');
-		
-								// Set switching.
-									$modal.classList.add('switching');
-		
-								// Delay (wait for switching transition).
-									setTimeout(function() {
-		
-										// Set current, src.
-											_this.current = index;
-											$modalImage.src = item.href;
-		
-										// Delay.
-											setTimeout(function() {
-		
-												// Focus.
-													$modal.focus();
-		
-												// Unlock.
-													_this.locked = false;
-		
-											}, _this.delay);
-		
-									}, _this.delay);
-		
-							}
-		
-						// Otherwise ...
-							else {
-		
-								// Set current, src.
-									_this.current = index;
-									$modalImage.src = item.href;
-		
-								// Set visible.
-									$modal.classList.add('visible');
-		
-								// Delay.
-									setTimeout(function() {
-		
-										// Focus.
-											$modal.focus();
-		
-										// Unlock.
-											_this.locked = false;
-		
-									}, _this.delay);
-		
-							}
-		
-					};
-		
-					$modal.hide = function() {
-		
-						// Locked? Bail.
-							if (_this.locked)
-								return;
-		
-						// Already hidden? Bail.
-							if (!$modal.classList.contains('visible'))
-								return;
-		
-						// Lock.
-							_this.locked = true;
-		
-						// Clear visible, loaded, switching.
-							$modal.classList.remove('visible');
-							$modal.classList.remove('loaded');
-							$modal.classList.remove('switching');
-		
-						// Delay (wait for visible transition).
-							setTimeout(function() {
-		
-								// Clear src.
-									$modalImage.src = '';
-		
-								// Unlock.
-									_this.locked = false;
-		
-								// Focus.
-									$body.focus();
-		
-								// Clear current.
-									_this.current = null;
-		
-							}, _this.delay);
-		
-					};
-		
-					$modal.next = function() {
-						$modal.show(null, 1);
-					};
-		
-					$modal.previous = function() {
-						$modal.show(null, -1);
-					};
-		
-					$modal.first = function() {
-						$modal.show(0);
-					};
-		
-					$modal.last = function() {
-						$modal.show(_this.$links.length - 1);
-					};
-		
-				// Events.
-					$modal.addEventListener('touchmove', function(event) {
-						event.preventDefault();
-					});
-		
-					$modal.addEventListener('click', function(event) {
-						$modal.hide();
-					});
-		
-					$modal.addEventListener('keydown', function(event) {
-		
-						// Not visible? Bail.
-							if (!$modal.classList.contains('visible'))
-								return;
-		
-						switch (event.keyCode) {
-		
-							// Right arrow, Space.
-								case 39:
-								case 32:
-		
-									if (!_this.navigation)
-										break;
-		
-									event.preventDefault();
-									event.stopPropagation();
-		
-									$modal.next();
-		
-									break;
-		
-							// Left arrow.
-								case 37:
-		
-									if (!_this.navigation)
-										break;
-		
-									event.preventDefault();
-									event.stopPropagation();
-		
-									$modal.previous();
-		
-									break;
-		
-							// Home.
-								case 36:
-		
-									if (!_this.navigation)
-										break;
-		
-									event.preventDefault();
-									event.stopPropagation();
-		
-									$modal.first();
-		
-									break;
-		
-							// End.
-								case 35:
-		
-									if (!_this.navigation)
-										break;
-		
-									event.preventDefault();
-									event.stopPropagation();
-		
-									$modal.last();
-		
-									break;
-		
-							// Escape.
-								case 27:
-		
-									event.preventDefault();
-									event.stopPropagation();
-		
-									$modal.hide();
-		
-									break;
+							// Couldn't find an allowed item? Bail.
+								if (!found)
+									return;
 		
 						}
 		
-					});
+					// Otherwise, see if requested item is allowed.
+						else {
 		
-					$modalNext.addEventListener('click', function(event) {
-						$modal.next();
-					});
+							// Check index.
 		
-					$modalPrevious.addEventListener('click', function(event) {
-						$modal.previous();
-					});
+								// Less than zero? Jump to end.
+									if (index < 0)
+										index = _this.$links.length - 1;
 		
-				// Set.
-					this.$modal = $modal;
-					this.$modalImage = $modalImage;
-					this.$modalNext = $modalNext;
-					this.$modalPrevious = $modalPrevious;
+								// Greater than length? Jump to beginning.
+									else if (index >= _this.$links.length)
+										index = 0;
 		
-			};
+								// Already there? Bail.
+									if (index == _this.current)
+										return;
 		
-			/**
-			 * Show.
-			 * @param {string} href Image href.
-			 */
-			lightboxGallery.prototype.show = function(href, config) {
+							// Get item.
+								item = _this.$links.item(index);
 		
-				// Update config.
-					this.$links = config.$links;
-					this.navigation = config.navigation;
-					this.mobile = config.mobile;
+								if (!item)
+									return;
 		
-					if (this.navigation) {
+							// Ignored? Bail.
+								if (item.dataset.lightboxIgnore == '1')
+									return;
 		
-						this.$modalNext.style.display = '';
-						this.$modalPrevious.style.display = '';
+						}
+		
+					// Mobile? Set zoom handler interval.
+						if (client.mobile)
+							_this.zoomIntervalId = setInterval(function() {
+								_this.zoomHandler();
+							}, 250);
+		
+					// Lock.
+						_this.locked = true;
+		
+					// Current?
+						if (_this.current !== null) {
+		
+							// Clear loaded.
+								$modal.classList.remove('loaded');
+		
+							// Set switching.
+								$modal.classList.add('switching');
+		
+							// Apply direction modifier (if applicable).
+								switch (direction) {
+		
+									case -1:
+										$modal.classList.add('from-left');
+										break;
+		
+									case 1:
+										$modal.classList.add('from-right');
+										break;
+		
+									default:
+										break;
+		
+								}
+		
+							// Delay (wait for switching transition).
+								setTimeout(function() {
+		
+									// Set current, src.
+										_this.current = index;
+										$modalImage.src = item.href;
+		
+									// Delay.
+										setTimeout(function() {
+		
+											// Focus.
+												$modal.focus();
+		
+											// Unlock.
+												_this.locked = false;
+		
+										}, _this.delay);
+		
+								}, _this.delay);
+		
+						}
+		
+					// Otherwise ...
+						else {
+		
+							// Set current, src.
+								_this.current = index;
+								$modalImage.src = item.href;
+		
+							// Set visible.
+								$modal.classList.add('visible');
+		
+							// Delay.
+								setTimeout(function() {
+		
+									// Focus.
+										$modal.focus();
+		
+									// Unlock.
+										_this.locked = false;
+		
+								}, _this.delay);
+		
+						}
+		
+				};
+		
+				$modal.hide = function() {
+		
+					// Locked? Bail.
+						if (_this.locked)
+							return;
+		
+					// Already hidden? Bail.
+						if (!$modal.classList.contains('visible'))
+							return;
+		
+					// Lock.
+						_this.locked = true;
+		
+					// Clear visible, loaded, switching.
+						$modal.classList.remove('visible');
+						$modal.classList.remove('loaded');
+						$modal.classList.remove('switching', 'from-left', 'from-right', 'done');
+		
+					// Clear zoom handler interval.
+						clearInterval(_this.zoomIntervalId);
+		
+					// Delay (wait for visible transition).
+						setTimeout(function() {
+		
+							// Clear src.
+								$modalImage.src = '';
+		
+							// Unlock.
+								_this.locked = false;
+		
+							// Focus.
+								$body.focus();
+		
+							// Clear current.
+								_this.current = null;
+		
+						}, _this.delay);
+		
+				};
+		
+				$modal.next = function(direction) {
+					$modal.show(null, 1, direction);
+				};
+		
+				$modal.previous = function(direction) {
+					$modal.show(null, -1, direction);
+				};
+		
+				$modal.first = function() {
+					$modal.show(0);
+				};
+		
+				$modal.last = function() {
+					$modal.show(_this.$links.length - 1);
+				};
+		
+			// Events.
+				$modalInner.addEventListener('touchstart', function(event) {
+		
+					// Navigation disabled? Bail.
+						if (!_this.navigation)
+							return;
+		
+					// More than two touches? Bail.
+						if (event.touches.length > 1)
+							return;
+		
+					// Record drag start.
+						dragStart = {
+							x: event.touches[0].clientX,
+							y: event.touches[0].clientY
+						};
+		
+				});
+		
+				$modalInner.addEventListener('touchmove', function(event) {
+		
+					var dx, dy;
+		
+					// Navigation disabled? Bail.
+						if (!_this.navigation)
+							return;
+		
+					// No drag start, or more than two touches? Bail.
+						if (!dragStart
+						||	event.touches.length > 1)
+							return;
+		
+					// Record drag end.
+						dragEnd = {
+							x: event.touches[0].clientX,
+							y: event.touches[0].clientY
+						};
+		
+					// Determine deltas.
+						dx = dragStart.x - dragEnd.x;
+						dy = dragStart.y - dragEnd.y;
+		
+					// Doesn't exceed threshold? Bail.
+						if (Math.abs(dx) < 50)
+							return;
+		
+					// Prevent default.
+						event.preventDefault();
+		
+					// Positive value? Move to next.
+						if (dx > 0)
+							$modal.next(-1);
+		
+					// Negative value? Move to previous.
+						else if (dx < 0)
+							$modal.previous(1);
+		
+				});
+		
+				$modalInner.addEventListener('touchend', function(event) {
+		
+					// Navigation disabled? Bail.
+						if (!_this.navigation)
+							return;
+		
+					// Clear drag start, end.
+						dragStart = null;
+						dragEnd = null;
+		
+				});
+		
+				$modal.addEventListener('click', function(event) {
+					$modal.hide();
+				});
+		
+				$modal.addEventListener('keydown', function(event) {
+		
+					// Not visible? Bail.
+						if (!$modal.classList.contains('visible'))
+							return;
+		
+					switch (event.keyCode) {
+		
+						// Right arrow, Space.
+							case 39:
+							case 32:
+		
+								if (!_this.navigation)
+									break;
+		
+								event.preventDefault();
+								event.stopPropagation();
+		
+								$modal.next();
+		
+								break;
+		
+						// Left arrow.
+							case 37:
+		
+								if (!_this.navigation)
+									break;
+		
+								event.preventDefault();
+								event.stopPropagation();
+		
+								$modal.previous();
+		
+								break;
+		
+						// Home.
+							case 36:
+		
+								if (!_this.navigation)
+									break;
+		
+								event.preventDefault();
+								event.stopPropagation();
+		
+								$modal.first();
+		
+								break;
+		
+						// End.
+							case 35:
+		
+								if (!_this.navigation)
+									break;
+		
+								event.preventDefault();
+								event.stopPropagation();
+		
+								$modal.last();
+		
+								break;
+		
+						// Escape.
+							case 27:
+		
+								event.preventDefault();
+								event.stopPropagation();
+		
+								$modal.hide();
+		
+								break;
 		
 					}
-					else {
 		
-						this.$modalNext.style.display = 'none';
-						this.$modalPrevious.style.display = 'none';
+				});
 		
-					}
+				$modalNext.addEventListener('click', function(event) {
+					$modal.next();
+				});
 		
-				// Mobile and not permitted? Bail.
-					if (client.mobile && !this.mobile)
-						return;
+				$modalPrevious.addEventListener('click', function(event) {
+					$modal.previous();
+				});
 		
-				// Show modal.
-					this.$modal.show(href);
+			// Set.
+				this.$modal = $modal;
+				this.$modalImage = $modalImage;
+				this.$modalNext = $modalNext;
+				this.$modalPrevious = $modalPrevious;
 		
-			};
+		};
 		
-			var _lightboxGallery = new lightboxGallery;
+		/**
+		 * Show.
+		 * @param {string} href Image href.
+		 */
+		lightboxGallery.prototype.show = function(href, config) {
+		
+			// Update config.
+				this.$links = config.$links;
+				this.navigation = config.navigation;
+				this.mobile = config.mobile;
+				this.protect = config.protect;
+		
+			// Navigation.
+				if (this.navigation) {
+		
+					this.$modalNext.style.display = '';
+					this.$modalPrevious.style.display = '';
+		
+				}
+				else {
+		
+					this.$modalNext.style.display = 'none';
+					this.$modalPrevious.style.display = 'none';
+		
+				}
+		
+			// Protect.
+				if (this.protect) {
+		
+					this.$modalImage.style.WebkitTouchCallout = 'none';
+					this.$modalImage.style.userSelect = 'none';
+		
+				}
+				else {
+		
+					this.$modalImage.style.WebkitTouchCallout = '';
+					this.$modalImage.style.userSelect = '';
+		
+				}
+		
+			// Mobile.
+				if (client.mobile && !this.mobile)
+					return;
+		
+			// Show modal.
+				this.$modal.show(href);
+		
+		};
+		
+		/**
+		 * Zoom handler.
+		 */
+		lightboxGallery.prototype.zoomHandler = function() {
+		
+			var threshold = window.matchMedia('(orientation: portrait)').matches ? 50 : 100;
+		
+			// Zoomed in? Set zooming.
+				if (window.outerWidth > window.innerWidth + threshold)
+					this.$modal.classList.add('zooming');
+		
+			// Otherwise, clear zooming.
+				else
+					this.$modal.classList.remove('zooming');
+		
+		};
+		
+		var _lightboxGallery = new lightboxGallery;
 	
 	// Gallery: gallery01.
 		_lightboxGallery.init({
 			id: 'gallery01',
 			navigation: true,
-			mobile: true
+			mobile: true,
 		});
 
 })();
